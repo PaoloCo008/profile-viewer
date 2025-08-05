@@ -1,3 +1,6 @@
+import './assets/css/reset.css'
+import './assets/css/main.css'
+
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'

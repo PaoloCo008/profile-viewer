@@ -1,5 +1,6 @@
 import * as fs from 'fs'
 import { User } from '../src/lib/types/global'
+import dayjs from 'dayjs'
 
 async function setupDatabase(): Promise<void> {
   if (fs.existsSync('./db.json')) {
@@ -13,7 +14,7 @@ async function setupDatabase(): Promise<void> {
 
     const initialUsers = users.map((user: User) => ({
       ...user,
-      createdAt: new Date().toISOString(), // Same timestamp for all
+      createdAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
     }))
 
     const db = {

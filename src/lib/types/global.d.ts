@@ -1,5 +1,5 @@
 export interface User {
-  id: number
+  id: string
   name: string
   username: string
   email: string
@@ -21,4 +21,11 @@ export interface User {
     catchPhrase: string
     bs: string
   }
+}
+
+export interface DisplayUser {
+  id: number
+  name: string
+  email: string
+  address: string
 }
