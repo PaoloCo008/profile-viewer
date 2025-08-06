@@ -1,25 +1,26 @@
 <script setup lang="ts">
 import { useUserStore } from '@/stores/UserStore'
-import { computed, onBeforeMount, ref } from 'vue'
+import { computed, onBeforeMount, onBeforeUnmount, onMounted, ref } from 'vue'
 import UserGrid from './users/UserGrid.vue'
 import UserTable from './users/UserTable.vue'
 import UserDraggableActions from './users/UserDraggableActions.vue'
 import { Grid3x3, Plus, Table, Search } from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 
 const userStore = useUserStore()
+const router = useRouter()
+const isRefreshing = ref(false)
+let abortController: AbortController | null = null
 
-// View mode state
 const viewMode = ref<'table' | 'grid'>('table')
 
-// Modal state
 const modalVisible = ref(false)
 const modalMode = ref<'add' | 'edit' | 'delete'>('add')
 const selectedUser = ref(null)
 
-// Floating panel state
 const floatingPanelVisible = ref(false)
 
-// Search state
 const searchValue = ref('')
 
 const users = computed(() =>
@@ -33,7 +34,6 @@ const users = computed(() =>
   })),
 )
 
-// Autocomplete search handler using your array method logic
 const handleSearch = (queryString: string, callback: Function) => {
   if (!queryString.trim()) {
     callback(users.value)
@@ -61,23 +61,12 @@ const handleSelect = (item: any) => {
   // Optionally focus on the selected user or perform other actions
 }
 
-const clearSearch = () => {
-  searchValue.value = ''
-}
-
 const toggleView = (mode: 'table' | 'grid') => {
   viewMode.value = mode
 }
 
 const isTableView = computed(() => viewMode.value === 'table')
 const isGridView = computed(() => viewMode.value === 'grid')
-
-// Modal methods
-const openAddModal = () => {
-  modalMode.value = 'add'
-  selectedUser.value = null
-  modalVisible.value = true
-}
 
 const openEditModal = (user: any) => {
   modalMode.value = 'edit'
@@ -97,12 +86,6 @@ const openDeleteModal = (user: any) => {
   modalVisible.value = true
 }
 
-const closeModal = () => {
-  modalVisible.value = false
-  selectedUser.value = null
-}
-
-// Floating panel methods
 const toggleFloatingPanel = () => {
   floatingPanelVisible.value = !floatingPanelVisible.value
 }
@@ -111,17 +94,50 @@ const closeFloatingPanel = () => {
   floatingPanelVisible.value = false
 }
 
-const handleFloatingPanelAction = (mode: 'add' | 'edit' | 'delete', user?: any) => {
-  modalMode.value = mode
-  selectedUser.value = user || null
-  modalVisible.value = true
-  // Optionally close the floating panel after opening modal
-  // floatingPanelVisible.value = false
+const refreshUsers = async () => {
+  if (isRefreshing.value) return
+
+  isRefreshing.value = true
+
+  abortController = new AbortController()
+
+  try {
+    const fetchedUsers = await userStore.fetchUsers(abortController)
+
+    if (fetchedUsers) {
+      ElMessage.success('Users refreshed successfully')
+    } else {
+      ElMessage.error('Failed to refresh users')
+    }
+  } catch (err) {
+    console.error('Failed to refresh users:', err)
+    ElMessage.error(err?.message || 'Failed to refresh user data')
+  } finally {
+    setTimeout(() => {
+      isRefreshing.value = false
+    }, 500)
+  }
 }
 
-onBeforeMount(async () => {
-  console.log('On onBeforeMount: Fetching users')
-  await userStore.fetchUsers()
+onMounted(async () => {
+  abortController = new AbortController()
+
+  try {
+    const fetchedUsers = await userStore.fetchUsers(abortController)
+
+    if (!fetchedUsers) {
+      ElMessage.error('User not found')
+    }
+  } catch (err) {
+    console.error('Failed to fetch user:', err)
+    ElMessage.error(err.message || 'Failed to load user data')
+  }
+})
+
+onBeforeUnmount(() => {
+  console.log('Log on onBeforeUnmount')
+
+  abortController?.abort()
 })
 </script>
 
@@ -130,7 +146,12 @@ onBeforeMount(async () => {
     <!-- Header with controls -->
     <div class="view-header">
       <div class="header-content">
-        <h2 class="page-title">Users</h2>
+        <div class="header-title">
+          <h2 class="page-title">Users</h2>
+          <el-icon class="refresh-icon" :class="{ refreshing: isRefreshing }" @click="refreshUsers"
+            ><Refresh
+          /></el-icon>
+        </div>
 
         <!-- Search Bar -->
         <div class="search-container">
@@ -147,7 +168,10 @@ onBeforeMount(async () => {
               <Search class="search-icon" />
             </template>
             <template #default="{ item }">
-              <div class="search-item">
+              <div
+                class="search-item"
+                @click="router.push({ name: 'user-profile', params: { userId: item.id } })"
+              >
                 <div class="search-item-name">{{ item.name }}</div>
                 <div class="search-item-details">
                   <span class="search-item-email">{{ item.email }}</span>
@@ -201,7 +225,28 @@ onBeforeMount(async () => {
 </template>
 
 <style scoped>
-/* Mobile-first base styles */
+.refresh-icon {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  cursor: pointer;
+}
+
+.refresh-icon.refreshing {
+  animation: spin 1s linear infinite;
+  color: #3b82f6;
+  cursor: not-allowed;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .user-view-container {
   padding: 12px;
   background-color: #f5f7fa;
@@ -215,6 +260,7 @@ onBeforeMount(async () => {
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
   margin-bottom: 16px;
   padding: 16px;
+  position: relative;
 }
 
 .header-content {
@@ -236,6 +282,7 @@ onBeforeMount(async () => {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 16px;
   width: 100%;
 }
@@ -405,7 +452,7 @@ onBeforeMount(async () => {
 
   .header-actions {
     flex-direction: row;
-    justify-content: space-between;
+    justify-content: center;
     width: 100%;
     align-items: flex-end;
   }
@@ -438,6 +485,16 @@ onBeforeMount(async () => {
 
 /* Tablets */
 @media (min-width: 768px) {
+  .refresh-icon {
+    position: static;
+  }
+
+  .header-title {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
   .user-view-container {
     padding: 20px;
   }

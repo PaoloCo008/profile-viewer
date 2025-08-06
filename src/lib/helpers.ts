@@ -17,3 +17,12 @@ export function handleApiError(res: Response, action: string) {
     throw new Error(`${action} failed`)
   }
 }
+
+export function getInitials(name: string) {
+  return name
+    .split(' ')
+    .map((word) => word.charAt(0))
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+}

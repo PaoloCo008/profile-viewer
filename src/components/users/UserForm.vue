@@ -10,7 +10,6 @@ const emit = defineEmits<{ (e: 'complete'): void }>()
 const userStore = useUserStore()
 
 const user = props.userId ? userStore.getUserById(props.userId) : undefined
-const buttonLoading = ref(false)
 
 const isEditting = computed(() => !!props.userId)
 
@@ -52,8 +51,6 @@ const rules = reactive<FormRules<UserForm>>({
 const submitForm = async (formEl: FormInstance | undefined) => {
   if (!formEl) return
   try {
-    buttonLoading.value = true
-
     try {
       await formEl.validate()
     } catch (validationError) {
@@ -94,8 +91,6 @@ const submitForm = async (formEl: FormInstance | undefined) => {
     })
 
     emit('complete')
-  } finally {
-    buttonLoading.value = false
   }
 }
 
@@ -204,8 +199,8 @@ const resetForm = (formEl: FormInstance | undefined) => {
       </div>
 
       <el-form-item>
-        <el-button class="primary button" native-type="submit" :loading="buttonLoading">
-          <span v-if="!buttonLoading">
+        <el-button class="primary button" native-type="submit" :loading="userStore.loading">
+          <span v-if="!userStore.loading">
             {{ isEditting ? 'Edit' : 'Create' }}
           </span>
           <span v-else>

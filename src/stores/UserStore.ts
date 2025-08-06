@@ -9,7 +9,8 @@ import { computed, ref } from 'vue'
 export const useUserStore = defineStore('user', () => {
   // State
   const users = ref<User[]>([])
-  const loading = ref<boolean>(false)
+  const initialized = ref(false)
+  const loading = ref(false)
 
   // Computed
   const getUserById = computed(() => (id: string) => {
@@ -23,22 +24,74 @@ export const useUserStore = defineStore('user', () => {
   })
 
   // Actions
-  async function fetchUsers() {
+  async function fetchUsers(controller: AbortController) {
+    let loadingInstance
+
+    if (initialized.value) {
+      loading.value = true
+    } else {
+      loadingInstance = ElLoading.service({
+        lock: true,
+        text: 'Fetching users...',
+        background: 'rgba(0, 0, 0, 0.7)',
+      })
+    }
+
+    try {
+      const res = await fetch(`${BASE_ENDPOINT}/users`, {
+        signal: controller.signal,
+      })
+
+      if (!res.ok) {
+        handleApiError(res, 'Fetch users')
+        return null
+      }
+
+      const fetchedUsers = await res.json()
+
+      users.value = fetchedUsers.map((user: User) => ({ ...user }))
+
+      if (!initialized.value) {
+        initialized.value = true
+        loadingInstance?.close()
+      }
+
+      return fetchedUsers
+    } catch (error: unknown) {
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Network error')
+      }
+
+      if (error instanceof Error) {
+        throw error
+      }
+
+      throw new Error('Unknown error occurred')
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function fetchUser(userId: string, controller: AbortController) {
     const loadingInstance = ElLoading.service({
       lock: true,
-      text: 'Fetching users...',
+      text: 'Fetching user...',
       background: 'rgba(0, 0, 0, 0.7)',
     })
 
     try {
-      const res = await fetch(`${BASE_ENDPOINT}/users`)
+      const res = await fetch(`${BASE_ENDPOINT}/users/${userId}`, {
+        signal: controller.signal,
+      })
 
       if (!res.ok) {
-        handleApiError(res, 'Fetch users')
+        handleApiError(res, 'Fetch user')
+        return null
       }
 
-      const fetchedUsers = await res.json()
-      users.value = fetchedUsers.map((user: User) => ({ ...user }))
+      const user = await res.json()
+
+      return user
     } catch (error: unknown) {
       if (error instanceof TypeError && error.message.includes('fetch')) {
         throw new Error('Network error')
@@ -58,9 +111,8 @@ export const useUserStore = defineStore('user', () => {
     try {
       loading.value = true
 
-      // Generate new ID safely
       const lastUserId =
-        users.value.length > 0 ? Math.max(...users.value.map((u) => Number(u.id))) : 0
+        users.value.length > 0 ? Math.max(...users.value.map((user) => Number(user.id))) : 0
 
       const newUser = {
         id: String(lastUserId + 1),
@@ -212,6 +264,7 @@ export const useUserStore = defineStore('user', () => {
     getUserById,
     isUserInUsers,
     fetchUsers,
+    fetchUser,
     createUser,
     updateUser,
     deleteUser,

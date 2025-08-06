@@ -7,28 +7,22 @@ import { useUserStore } from '@/stores/UserStore'
 
 const userStore = useUserStore()
 
-// Emits
 const emit = defineEmits(['close'])
 
-// Refs
 const panelRef = ref(null)
 
-// State
 const userId = ref('')
 
-// Dragging state
 const isDragging = ref(false)
 const dragOffset = reactive({ x: 0, y: 0 })
 const position = reactive({ x: 20, y: 100 })
 
-// Computed
 const panelStyle = computed(() => ({
   left: `${position.x}px`,
   top: `${position.y}px`,
   cursor: isDragging.value ? 'grabbing' : 'grab',
 }))
 
-// Methods
 const closePanel = () => {
   emit('close')
 }
@@ -80,7 +74,6 @@ async function handleDelete() {
   }
 }
 
-// Drag functionality
 const startDrag = (e) => {
   if (!panelRef.value) return
 
@@ -102,7 +95,6 @@ const onDrag = (e) => {
   const newX = e.clientX - dragOffset.x
   const newY = e.clientY - dragOffset.y
 
-  // Keep panel within viewport bounds
   const maxX = window.innerWidth - 220
   const maxY = window.innerHeight - 320
 
@@ -117,7 +109,6 @@ const stopDrag = () => {
   document.body.style.userSelect = ''
 }
 
-// Initialize position
 onMounted(() => {
   nextTick(() => {
     const maxX = window.innerWidth - 220
@@ -128,7 +119,6 @@ onMounted(() => {
   })
 })
 
-// Cleanup
 onUnmounted(() => {
   document.removeEventListener('mousemove', onDrag)
   document.removeEventListener('mouseup', stopDrag)
@@ -138,7 +128,6 @@ onUnmounted(() => {
 
 <template>
   <div ref="panelRef" class="floating-panel" :style="panelStyle" @mousedown="startDrag">
-    <!-- Header -->
     <div class="panel-header">
       <div class="header-content">
         <span class="panel-title">User Actions</span>
@@ -146,30 +135,35 @@ onUnmounted(() => {
       <button class="close-btn" @click="closePanel" @mousedown.stop>✕</button>
     </div>
 
-    <!-- Content -->
     <div class="panel-content" @mousedown.stop>
-      <!-- User ID Input -->
       <div class="input-group">
         <label for="userId" class="input-label">User ID:</label>
-        <input
-          id="userId"
-          v-model="userId"
-          type="number"
-          class="user-id-input"
-          placeholder="Enter ID"
-          min="1"
-          @keyup.enter="handleEdit"
-        />
+        <AppModal>
+          <template #trigger="props">
+            <input
+              id="userId"
+              v-model="userId"
+              type="number"
+              class="user-id-input"
+              placeholder="Enter ID"
+              min="1"
+              @keyup.enter="props.onTriggerClick"
+            />
+          </template>
+
+          <template #default="props">
+            <UserForm :user-id="String(userId)" @complete="props.closeModal" />
+          </template>
+        </AppModal>
       </div>
 
-      <!-- Action Buttons Row 1 -->
       <div class="action-row">
         <AppModal>
           <template #trigger="props">
             <el-button
               class="action-btn primary"
               @click="props.onTriggerClick"
-              :disabled="isLoading"
+              :disabled="userStore.loading"
               >Add</el-button
             >
           </template>
@@ -184,7 +178,7 @@ onUnmounted(() => {
             <el-button
               class="action-btn secondary"
               @click="props.onTriggerClick"
-              :disabled="!userId || isLoading"
+              :disabled="!userId || userStore.loading"
             >
               Edit
             </el-button>
@@ -196,25 +190,22 @@ onUnmounted(() => {
         </AppModal>
       </div>
 
-      <!-- Action Buttons Row 2 -->
       <div class="action-row">
         <button
           class="action-btn danger full-width"
           @click="handleDelete"
-          :disabled="!userId || isLoading"
+          :disabled="!userId || userStore.loading"
         >
           Delete
         </button>
       </div>
 
-      <!-- Loading Indicator -->
-      <div v-if="isLoading" class="loading-overlay">
+      <div v-if="userStore.loading" class="loading-overlay">
         <div class="loading-spinner"></div>
       </div>
     </div>
   </div>
 
-  <!-- Drag Handle -->
   <div class="drag-handle">
     <div class="drag-dots">
       <div class="dot"></div>
