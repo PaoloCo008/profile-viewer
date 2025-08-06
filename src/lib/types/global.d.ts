@@ -24,7 +24,7 @@ export interface User {
 }
 
 export interface DisplayUser {
-  id: number
+  id: string
   name: string
   email: string
   address: string
