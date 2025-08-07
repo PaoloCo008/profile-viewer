@@ -1,6 +1,10 @@
 <script lang="ts" setup>
-import { ElMessageBox } from 'element-plus'
-import { ref } from 'vue'
+import { ElMessageBox, ElMessage } from 'element-plus'
+import { ref, inject, type InjectionKey } from 'vue'
+
+const OperationStateKey: InjectionKey<{
+  isOperationInProgress: () => boolean
+}> = Symbol('OperationState')
 
 const modalVisible = ref(false)
 
@@ -12,10 +16,30 @@ function closeModal() {
   modalVisible.value = false
 }
 
-function handleBeforeClose(done: () => void) {
-  ElMessageBox.confirm('Are you sure to cancel your action').then(() => {
+async function handleBeforeClose(done: () => void) {
+  const operationState = inject(OperationStateKey)
+  const isOperationInProgress = operationState?.isOperationInProgress() || false
+
+  if (isOperationInProgress) {
+    ElMessage({
+      type: 'warning',
+      message: 'Please wait for the current operation to complete',
+    })
+    return
+  }
+
+  try {
+    await ElMessageBox.confirm(
+      'Are you sure you want to cancel? Any unsaved changes will be lost.',
+      'Confirm Cancel',
+      {
+        confirmButtonText: 'Yes, Cancel',
+        cancelButtonText: 'Continue Action',
+        type: 'warning',
+      },
+    )
     done()
-  })
+  } catch {}
 }
 </script>
 
@@ -23,7 +47,14 @@ function handleBeforeClose(done: () => void) {
   <slot name="trigger" :onTriggerClick></slot>
 
   <Teleport to="body">
-    <el-dialog destroy-on-close v-model="modalVisible" center :before-close="handleBeforeClose">
+    <el-dialog
+      destroy-on-close
+      v-model="modalVisible"
+      center
+      :before-close="handleBeforeClose"
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+    >
       <slot name="default" :closeModal></slot>
     </el-dialog>
   </Teleport>

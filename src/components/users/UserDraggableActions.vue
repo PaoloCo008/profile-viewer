@@ -5,12 +5,11 @@ import AppModal from '../app/AppModal.vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserStore } from '@/stores/UserStore'
 
-const userStore = useUserStore()
-
 const emit = defineEmits(['close'])
 
-const panelRef = ref(null)
+const userStore = useUserStore()
 
+const panelRef = ref<HTMLElement | null>(null)
 const userId = ref('')
 
 const isDragging = ref(false)
@@ -23,58 +22,51 @@ const panelStyle = computed(() => ({
   cursor: isDragging.value ? 'grabbing' : 'grab',
 }))
 
-const closePanel = () => {
+function closePanel() {
   emit('close')
 }
 
 async function handleDelete() {
   try {
     await ElMessageBox.confirm(
-      `Are you sure you want to delete user ${String(userId.value)}`,
-      'Delete',
+      `Are you sure you want to delete user ${String(userId.value)}?`,
+      'Delete User',
       {
         confirmButtonText: 'Delete',
         cancelButtonText: 'Cancel',
-        type: 'info',
-        beforeClose: async (action, instance, done) => {
-          if (action === 'confirm') {
-            instance.confirmButtonLoading = true
-            instance.confirmButtonText = 'Deleting...'
-
-            try {
-              await userStore.deleteUser(String(userId.value))
-              done()
-
-              ElMessage({
-                type: 'success',
-                message: 'Delete completed',
-              })
-            } catch (error) {
-              instance.confirmButtonLoading = false
-              instance.confirmButtonText = 'Delete'
-
-              ElMessage({
-                type: 'error',
-                message: error.message || 'Failed to delete user',
-              })
-            }
-          } else {
-            done()
-          }
-        },
+        type: 'warning',
       },
     )
+
+    const loadingMessage = ElMessage({
+      type: 'info',
+      message: 'Deleting user...',
+      duration: 0,
+    })
+
+    try {
+      await userStore.deleteUser(String(userId.value))
+
+      loadingMessage.close()
+      ElMessage({
+        type: 'success',
+        message: 'User deleted successfully',
+      })
+    } catch (error) {
+      loadingMessage.close()
+      ElMessage({
+        type: 'error',
+        message: (error as Error).message || 'Failed to delete user',
+      })
+    }
   } catch (error) {
     if (error === 'cancel') {
-      ElMessage({
-        type: 'info',
-        message: 'Delete canceled',
-      })
+      console.log('Delete operation cancelled by user')
     }
   }
 }
 
-const startDrag = (e) => {
+function startDrag(e: MouseEvent) {
   if (!panelRef.value) return
 
   isDragging.value = true
@@ -89,7 +81,7 @@ const startDrag = (e) => {
   document.body.style.userSelect = 'none'
 }
 
-const onDrag = (e) => {
+function onDrag(e: MouseEvent) {
   if (!isDragging.value) return
 
   const newX = e.clientX - dragOffset.x
@@ -102,7 +94,7 @@ const onDrag = (e) => {
   position.y = Math.max(0, Math.min(newY, maxY))
 }
 
-const stopDrag = () => {
+function stopDrag() {
   isDragging.value = false
   document.removeEventListener('mousemove', onDrag)
   document.removeEventListener('mouseup', stopDrag)
@@ -110,6 +102,8 @@ const stopDrag = () => {
 }
 
 onMounted(() => {
+  console.log('Logging from onMounted')
+
   nextTick(() => {
     const maxX = window.innerWidth - 220
     const maxY = window.innerHeight - 320
@@ -120,6 +114,8 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  console.log('Logging from onUnmounted')
+
   document.removeEventListener('mousemove', onDrag)
   document.removeEventListener('mouseup', stopDrag)
   document.body.style.userSelect = ''
@@ -199,10 +195,6 @@ onUnmounted(() => {
           Delete
         </button>
       </div>
-
-      <div v-if="userStore.loading" class="loading-overlay">
-        <div class="loading-spinner"></div>
-      </div>
     </div>
   </div>
 
@@ -231,7 +223,6 @@ onUnmounted(() => {
   user-select: none;
 }
 
-/* Header */
 .panel-header {
   background: #1a1a1a;
   color: #ffffff;
@@ -253,7 +244,7 @@ onUnmounted(() => {
 }
 
 .panel-title {
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
 }
 
@@ -265,14 +256,13 @@ onUnmounted(() => {
   padding: 4px 8px;
   border-radius: 4px;
   transition: background-color 0.2s;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 .close-btn:hover {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Content */
 .panel-content {
   padding: 16px;
   display: flex;
@@ -281,7 +271,6 @@ onUnmounted(() => {
   position: relative;
 }
 
-/* Input Group */
 .input-group {
   display: flex;
   flex-direction: column;
@@ -289,7 +278,7 @@ onUnmounted(() => {
 }
 
 .input-label {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 500;
   color: #374151;
 }
@@ -298,7 +287,7 @@ onUnmounted(() => {
   padding: 8px 10px;
   border: 2px solid #e5e7eb;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 0.8125rem;
   transition: border-color 0.2s;
   width: 100%;
   box-sizing: border-box;
@@ -309,7 +298,6 @@ onUnmounted(() => {
   border-color: #667eea;
 }
 
-/* Action Buttons */
 .action-row {
   display: flex;
   gap: 8px;
@@ -320,7 +308,7 @@ onUnmounted(() => {
   padding: 8px 12px;
   border: none;
   border-radius: 6px;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
@@ -336,7 +324,6 @@ onUnmounted(() => {
   cursor: not-allowed;
 }
 
-/* Button Variants */
 .action-btn.primary {
   background: #1a1a1a;
   color: white;
@@ -368,36 +355,6 @@ onUnmounted(() => {
   width: 100%;
 }
 
-/* Loading Overlay */
-.loading-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(255, 255, 255, 0.8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 0 0 12px 12px;
-}
-
-.loading-spinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid #e5e7eb;
-  border-top: 2px solid #667eea;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* Drag Handle */
 .drag-handle {
   background: #f3f4f6;
   padding: 6px;
@@ -423,7 +380,6 @@ onUnmounted(() => {
   border-radius: 50%;
 }
 
-/* Mobile adjustments */
 @media (max-width: 640px) {
   .floating-panel {
     width: 180px;
@@ -435,7 +391,7 @@ onUnmounted(() => {
 
   .action-btn {
     padding: 6px 8px;
-    font-size: 11px;
+    font-size: 0.6875rem;
   }
 }
 </style>

@@ -24,7 +24,7 @@ export const useUserStore = defineStore('user', () => {
   })
 
   // Actions
-  async function fetchUsers(controller: AbortController) {
+  async function fetchUsers(controller?: AbortController) {
     let loadingInstance
 
     if (initialized.value) {
@@ -39,7 +39,7 @@ export const useUserStore = defineStore('user', () => {
 
     try {
       const res = await fetch(`${BASE_ENDPOINT}/users`, {
-        signal: controller.signal,
+        signal: controller?.signal,
       })
 
       if (!res.ok) {
@@ -58,6 +58,10 @@ export const useUserStore = defineStore('user', () => {
 
       return fetchedUsers
     } catch (error: unknown) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        throw error
+      }
+
       if (error instanceof TypeError && error.message.includes('fetch')) {
         throw new Error('Network error')
       }
@@ -72,7 +76,7 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  async function fetchUser(userId: string, controller: AbortController) {
+  async function fetchUser(userId: string, controller?: AbortController) {
     const loadingInstance = ElLoading.service({
       lock: true,
       text: 'Fetching user...',
@@ -81,7 +85,7 @@ export const useUserStore = defineStore('user', () => {
 
     try {
       const res = await fetch(`${BASE_ENDPOINT}/users/${userId}`, {
-        signal: controller.signal,
+        signal: controller?.signal,
       })
 
       if (!res.ok) {
@@ -93,6 +97,10 @@ export const useUserStore = defineStore('user', () => {
 
       return user
     } catch (error: unknown) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        throw error
+      }
+
       if (error instanceof TypeError && error.message.includes('fetch')) {
         throw new Error('Network error')
       }
@@ -107,7 +115,7 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  async function createUser(user: UserForm) {
+  async function createUser(user: UserForm, controller?: AbortController) {
     try {
       loading.value = true
 
@@ -145,6 +153,7 @@ export const useUserStore = defineStore('user', () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(newUser),
+        signal: controller?.signal,
       })
 
       if (!res.ok) {
@@ -156,6 +165,10 @@ export const useUserStore = defineStore('user', () => {
 
       return createdUser
     } catch (error: unknown) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        throw error
+      }
+
       if (error instanceof TypeError && error.message.includes('fetch')) {
         throw new Error('Network error')
       }
@@ -170,7 +183,7 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  async function updateUser(userId: string, user: UserForm) {
+  async function updateUser(userId: string, user: UserForm, controller?: AbortController) {
     try {
       loading.value = true
 
@@ -205,6 +218,7 @@ export const useUserStore = defineStore('user', () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(updatedUser),
+        signal: controller?.signal,
       })
 
       if (!res.ok) {
@@ -216,6 +230,10 @@ export const useUserStore = defineStore('user', () => {
 
       return responseUser
     } catch (error: unknown) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        throw error
+      }
+
       if (error instanceof TypeError && error.message.includes('fetch')) {
         throw new Error('Network error')
       }
@@ -230,12 +248,13 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  async function deleteUser(userId: string) {
+  async function deleteUser(userId: string, controller?: AbortController) {
     try {
       loading.value = true
 
       const res = await fetch(`${BASE_ENDPOINT}/users/${userId}`, {
         method: 'DELETE',
+        signal: controller?.signal,
       })
 
       if (!res.ok) {
@@ -244,6 +263,10 @@ export const useUserStore = defineStore('user', () => {
 
       users.value = users.value.filter((user) => user.id !== userId)
     } catch (error: unknown) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        throw error
+      }
+
       if (error instanceof TypeError && error.message.includes('fetch')) {
         throw new Error('Network error')
       }

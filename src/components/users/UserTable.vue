@@ -32,7 +32,6 @@ const userStore = useUserStore()
     </el-skeleton>
   </div>
 
-  <!-- Actual Table -->
   <el-table v-else :data="users" style="width: 100%">
     <el-table-column prop="id" label="ID" width="80" />
     <el-table-column prop="name" label="Name" width="270" />

@@ -1,27 +1,20 @@
 <script setup lang="ts">
 import { useUserStore } from '@/stores/UserStore'
-import { computed, onBeforeMount, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import UserGrid from './users/UserGrid.vue'
 import UserTable from './users/UserTable.vue'
 import UserDraggableActions from './users/UserDraggableActions.vue'
-import { Grid3x3, Plus, Table, Search } from 'lucide-vue-next'
-import { useRouter } from 'vue-router'
+import { Grid3x3, Plus, Table } from 'lucide-vue-next'
 import { ElMessage } from 'element-plus'
+import AppSearch from './app/AppSearch.vue'
 
-const userStore = useUserStore()
-const router = useRouter()
-const isRefreshing = ref(false)
 let abortController: AbortController | null = null
 
+const userStore = useUserStore()
+
+const isRefreshing = ref(false)
 const viewMode = ref<'table' | 'grid'>('table')
-
-const modalVisible = ref(false)
-const modalMode = ref<'add' | 'edit' | 'delete'>('add')
-const selectedUser = ref(null)
-
 const floatingPanelVisible = ref(false)
-
-const searchValue = ref('')
 
 const users = computed(() =>
   userStore.users.map((user) => ({
@@ -30,71 +23,25 @@ const users = computed(() =>
     email: user.email,
     username: user.username,
     address: `${user.address.street}, ${user.address.city}`,
-    fullAddress: user.address,
   })),
 )
-
-const handleSearch = (queryString: string, callback: Function) => {
-  if (!queryString.trim()) {
-    callback(users.value)
-    return
-  }
-
-  const queries = queryString.toLowerCase().split(/\s+/)
-
-  const results = queries.reduce((acc, query) => {
-    const regex = new RegExp(`^${query}|${query}`, 'gim')
-    const filterFields = ['name', 'email', 'username']
-
-    return acc.filter((user) => {
-      return filterFields.some((field) =>
-        regex.test((user[field as keyof typeof user] as string) || ''),
-      )
-    })
-  }, users.value)
-
-  callback(results)
-}
-
-const handleSelect = (item: any) => {
-  console.log('Selected user:', item)
-  // Optionally focus on the selected user or perform other actions
-}
-
-const toggleView = (mode: 'table' | 'grid') => {
-  viewMode.value = mode
-}
 
 const isTableView = computed(() => viewMode.value === 'table')
 const isGridView = computed(() => viewMode.value === 'grid')
 
-const openEditModal = (user: any) => {
-  modalMode.value = 'edit'
-  selectedUser.value = {
-    ...user,
-    address: user.fullAddress || { street: '', city: '' },
-  }
-  modalVisible.value = true
+function toggleView(mode: 'table' | 'grid') {
+  viewMode.value = mode
 }
 
-const openDeleteModal = (user: any) => {
-  modalMode.value = 'delete'
-  selectedUser.value = {
-    ...user,
-    address: user.fullAddress || { street: '', city: '' },
-  }
-  modalVisible.value = true
-}
-
-const toggleFloatingPanel = () => {
+function toggleFloatingPanel() {
   floatingPanelVisible.value = !floatingPanelVisible.value
 }
 
-const closeFloatingPanel = () => {
+function closeFloatingPanel() {
   floatingPanelVisible.value = false
 }
 
-const refreshUsers = async () => {
+async function refreshUsers() {
   if (isRefreshing.value) return
 
   isRefreshing.value = true
@@ -111,7 +58,7 @@ const refreshUsers = async () => {
     }
   } catch (err) {
     console.error('Failed to refresh users:', err)
-    ElMessage.error(err?.message || 'Failed to refresh user data')
+    ElMessage.error((err as Error)?.message || 'Failed to refresh user data')
   } finally {
     setTimeout(() => {
       isRefreshing.value = false
@@ -130,7 +77,7 @@ onMounted(async () => {
     }
   } catch (err) {
     console.error('Failed to fetch user:', err)
-    ElMessage.error(err.message || 'Failed to load user data')
+    ElMessage.error((err as Error).message || 'Failed to load user data')
   }
 })
 
@@ -143,7 +90,6 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="user-view-container">
-    <!-- Header with controls -->
     <div class="view-header">
       <div class="header-content">
         <div class="header-title">
@@ -153,63 +99,27 @@ onBeforeUnmount(() => {
           /></el-icon>
         </div>
 
-        <!-- Search Bar -->
-        <div class="search-container">
-          <el-autocomplete
-            v-model="searchValue"
-            :fetch-suggestions="handleSearch"
-            placeholder="Search users by name, email, or username"
-            @select="handleSelect"
-            class="search-input"
-            clearable
-            :popper-class="'user-search-popper'"
-          >
-            <template #prefix>
-              <Search class="search-icon" />
-            </template>
-            <template #default="{ item }">
-              <div
-                class="search-item"
-                @click="router.push({ name: 'user-profile', params: { userId: item.id } })"
-              >
-                <div class="search-item-name">{{ item.name }}</div>
-                <div class="search-item-details">
-                  <span class="search-item-email">{{ item.email }}</span>
-                  <span class="search-item-username">@{{ item.username }}</span>
-                </div>
-              </div>
-            </template>
-          </el-autocomplete>
-        </div>
+        <AppSearch :users />
+
         <div class="header-actions">
-          <div class="view-controls">
-            <span class="control-label">View:</span>
-            <div class="toggle-group">
-              <button :class="['toggle-btn', { active: isTableView }]" @click="toggleView('table')">
-                <Table /> Table
-              </button>
-              <button :class="['toggle-btn', { active: isGridView }]" @click="toggleView('grid')">
-                <Grid3x3 />Grid
-              </button>
-            </div>
+          <span class="control-label">View:</span>
+          <div class="toggle-group">
+            <button :class="['toggle-btn', { active: isTableView }]" @click="toggleView('table')">
+              <Table /> Table
+            </button>
+            <button :class="['toggle-btn', { active: isGridView }]" @click="toggleView('grid')">
+              <Grid3x3 /> Grid
+            </button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Content area -->
     <div class="view-content">
-      <UserTable
-        v-if="isTableView"
-        :users="users"
-        key="table"
-        @edit="openEditModal"
-        @delete="openDeleteModal"
-      />
-      <UserGrid v-else :users="users" key="grid" @edit="openEditModal" @delete="openDeleteModal" />
+      <UserTable v-if="isTableView" :users="users" />
+      <UserGrid v-else :users="users" />
     </div>
 
-    <!-- Floating Action Button -->
     <button
       class="floating-action-btn"
       :class="{ active: floatingPanelVisible }"
@@ -219,7 +129,6 @@ onBeforeUnmount(() => {
       <span class="fab-icon"> <Plus /> </span>
     </button>
 
-    <!-- Draggable User Actions Panel -->
     <UserDraggableActions v-if="floatingPanelVisible" :users="users" @close="closeFloatingPanel" />
   </div>
 </template>
@@ -248,7 +157,7 @@ onBeforeUnmount(() => {
 }
 
 .user-view-container {
-  padding: 12px;
+  padding: 1rem;
   background-color: #f5f7fa;
   min-height: 100vh;
   position: relative;
@@ -272,7 +181,7 @@ onBeforeUnmount(() => {
 
 .page-title {
   margin: 0;
-  font-size: 20px;
+  font-size: 1.375rem;
   font-weight: 700;
   color: #1a1a1a;
   text-align: center;
@@ -280,64 +189,14 @@ onBeforeUnmount(() => {
 
 .header-actions {
   display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
-  gap: 16px;
-  width: 100%;
-}
-
-/* Search styles */
-.search-container {
-  width: 100%;
-  max-width: 400px;
-}
-
-.search-input {
-  width: 100%;
-}
-
-.search-icon {
-  width: 16px;
-  height: 16px;
-  color: #6b7280;
-}
-
-.search-item {
-  padding: 8px 0;
-}
-
-.search-item-name {
-  font-weight: 500;
-  color: #1a1a1a;
-  margin-bottom: 4px;
-}
-
-.search-item-details {
-  display: flex;
-  gap: 12px;
-  font-size: 12px;
-  color: #6b7280;
-}
-
-.search-item-email {
-  color: #059669;
-}
-
-.search-item-username {
-  color: #7c3aed;
-}
-
-.view-controls {
-  display: flex;
-  flex-direction: column;
   align-items: center;
   gap: 8px;
   width: 100%;
 }
 
 .control-label {
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 500;
   color: #6b7280;
 }
@@ -349,19 +208,19 @@ onBeforeUnmount(() => {
   padding: 3px;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
   width: 100%;
-  max-width: 200px;
+  max-width: 180px;
 }
 
 .toggle-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 10px 12px;
+  font-size: 0.875rem;
+  gap: 6px;
+  padding: 8px 14px;
   border: none;
   background: transparent;
   border-radius: 5px;
-  font-size: 13px;
   font-weight: 500;
   color: #6b7280;
   cursor: pointer;
@@ -386,7 +245,6 @@ onBeforeUnmount(() => {
   overflow: hidden;
 }
 
-/* Floating Action Button */
 .floating-action-btn {
   position: fixed;
   bottom: 24px;
@@ -419,62 +277,22 @@ onBeforeUnmount(() => {
 }
 
 .fab-icon {
-  font-size: 24px;
+  font-size: 1.5rem;
   transition: all 0.3s ease;
 }
 
-/* Small mobile phones */
-@media (min-width: 375px) {
-  .add-text {
-    display: inline;
-  }
-
-  .toggle-btn {
-    font-size: 14px;
-    gap: 6px;
-  }
-}
-
-/* Large mobile phones */
 @media (min-width: 480px) {
-  .user-view-container {
-    padding: 16px;
-  }
-
   .view-header {
     padding: 18px;
     margin-bottom: 20px;
   }
 
   .page-title {
-    font-size: 22px;
+    font-size: 1.875rem;
   }
 
-  .header-actions {
-    flex-direction: row;
-    justify-content: center;
-    width: 100%;
-    align-items: flex-end;
-  }
-
-  .search-container {
-    max-width: 300px;
-  }
-
-  .view-controls {
-    flex-direction: row;
-    justify-content: center;
+  .view-header-actions {
     gap: 12px;
-    width: auto;
-  }
-
-  .toggle-group {
-    max-width: 180px;
-  }
-
-  .toggle-btn {
-    font-size: 14px;
-    padding: 8px 14px;
   }
 
   .floating-action-btn {
@@ -483,7 +301,6 @@ onBeforeUnmount(() => {
   }
 }
 
-/* Tablets */
 @media (min-width: 768px) {
   .refresh-icon {
     position: static;
@@ -513,7 +330,7 @@ onBeforeUnmount(() => {
   }
 
   .page-title {
-    font-size: 26px;
+    font-size: 1.625rem;
     text-align: left;
   }
 
@@ -522,10 +339,6 @@ onBeforeUnmount(() => {
     gap: 24px;
     width: auto;
     align-items: center;
-  }
-
-  .search-container {
-    max-width: 350px;
   }
 
   .view-controls {
@@ -550,28 +363,21 @@ onBeforeUnmount(() => {
   }
 }
 
-/* Desktop */
 @media (min-width: 1024px) {
   .user-view-container {
-    padding: 24px;
+    padding: 32px;
   }
 
   .view-header {
-    border-radius: 12px;
-    padding: 24px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    padding: 28px;
   }
 
   .page-title {
-    font-size: 28px;
-  }
-
-  .search-container {
-    max-width: 400px;
+    font-size: 2rem;
   }
 
   .control-label {
-    font-size: 14px;
+    font-size: 0.875rem;
   }
 
   .toggle-group {
@@ -580,7 +386,7 @@ onBeforeUnmount(() => {
 
   .toggle-btn {
     min-width: 80px;
-    font-size: 14px;
+    font-size: 0.875rem;
     gap: 6px;
   }
 
@@ -597,32 +403,7 @@ onBeforeUnmount(() => {
   }
 
   .fab-icon {
-    font-size: 28px;
+    font-size: 1.75rem;
   }
-}
-
-/* Large desktop */
-@media (min-width: 1440px) {
-  .user-view-container {
-    padding: 32px;
-  }
-
-  .view-header {
-    padding: 28px;
-  }
-
-  .page-title {
-    font-size: 32px;
-  }
-}
-
-/* Global styles for autocomplete dropdown */
-:global(.user-search-popper) {
-  max-width: 400px !important;
-}
-
-:global(.user-search-popper .el-autocomplete-suggestion__list) {
-  max-height: 300px;
-  overflow-y: auto;
 }
 </style>

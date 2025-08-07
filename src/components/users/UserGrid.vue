@@ -84,7 +84,6 @@ const userStore = useUserStore()
 <style scoped>
 .user-container {
   padding: 12px;
-  background-color: #f5f5f5;
   min-height: 100vh;
 }
 
@@ -96,13 +95,13 @@ const userStore = useUserStore()
   margin: 0 auto;
 }
 
-/* Skeleton Styles */
 .skeleton-card {
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   border: 1px solid #e1e5e9;
+  height: 206px;
 }
 
 .skeleton-card-header {
@@ -118,9 +117,9 @@ const userStore = useUserStore()
 }
 
 .skeleton-avatar {
-  width: 40px !important;
-  height: 40px !important;
-  border-radius: 50% !important;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   flex-shrink: 0;
 }
 
@@ -132,13 +131,13 @@ const userStore = useUserStore()
 }
 
 .skeleton-name {
-  width: 140px !important;
-  height: 16px !important;
+  width: 140px;
+  height: 16px;
 }
 
 .skeleton-id {
-  width: 60px !important;
-  height: 12px !important;
+  width: 60px;
+  height: 12px;
 }
 
 .skeleton-card-content {
@@ -156,23 +155,22 @@ const userStore = useUserStore()
 }
 
 .skeleton-icon {
-  width: 18px !important;
-  height: 18px !important;
-  border-radius: 50% !important;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
   flex-shrink: 0;
 }
 
 .skeleton-email {
-  width: 200px !important;
-  height: 14px !important;
+  width: 200px;
+  height: 14px;
 }
 
 .skeleton-address {
-  width: 250px !important;
-  height: 14px !important;
+  width: 250px;
+  height: 14px;
 }
 
-/* Original Card Styles */
 .user-card {
   background: white;
   border-radius: 12px;
@@ -210,7 +208,7 @@ const userStore = useUserStore()
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 0.875rem;
   color: white;
   border: 2px solid #333;
 }
@@ -221,13 +219,13 @@ const userStore = useUserStore()
 
 .user-name {
   margin: 0 0 4px 0;
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 600;
   color: white;
 }
 
 .user-id {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: rgba(255, 255, 255, 0.8);
   font-weight: 500;
 }
@@ -250,17 +248,16 @@ const userStore = useUserStore()
 .info-icon {
   margin-right: 12px;
   color: #1a1a1a;
-  font-size: 18px;
+  font-size: 1.125rem;
 }
 
 .info-text {
-  font-size: 14px;
+  font-size: 0.875rem;
   color: #333;
   line-height: 1.4;
   word-break: break-word;
 }
 
-/* Mobile-first responsive design */
 @media (min-width: 480px) {
   .user-container {
     padding: 16px;
@@ -268,16 +265,6 @@ const userStore = useUserStore()
 
   .user-grid {
     gap: 16px;
-  }
-
-  .skeleton-card-header,
-  .card-header {
-    padding: 16px;
-  }
-
-  .skeleton-card-content,
-  .card-content {
-    padding: 16px;
   }
 }
 
@@ -290,29 +277,6 @@ const userStore = useUserStore()
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 18px;
   }
-
-  .skeleton-card-header,
-  .card-header {
-    padding: 18px;
-  }
-
-  .skeleton-card-content,
-  .card-content {
-    padding: 18px;
-  }
-
-  /* Adjust skeleton sizes for larger screens */
-  .skeleton-name {
-    width: 160px !important;
-  }
-
-  .skeleton-email {
-    width: 220px !important;
-  }
-
-  .skeleton-address {
-    width: 280px !important;
-  }
 }
 
 @media (min-width: 1024px) {
@@ -323,66 +287,6 @@ const userStore = useUserStore()
   .user-grid {
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 20px;
-  }
-
-  .skeleton-card-header,
-  .card-header {
-    padding: 20px;
-  }
-
-  .skeleton-card-content,
-  .card-content {
-    padding: 20px;
-  }
-
-  .skeleton-user-info,
-  .user-info {
-    gap: 16px;
-  }
-
-  .skeleton-avatar {
-    width: 48px !important;
-    height: 48px !important;
-  }
-
-  .user-avatar {
-    width: 48px;
-    height: 48px;
-    font-size: 16px;
-  }
-
-  .user-name {
-    font-size: 18px;
-  }
-
-  /* Larger skeleton text for desktop */
-  .skeleton-name {
-    width: 180px !important;
-    height: 18px !important;
-  }
-
-  .skeleton-email {
-    width: 240px !important;
-  }
-
-  .skeleton-address {
-    width: 300px !important;
-  }
-}
-
-/* Additional skeleton animation styling */
-.skeleton-card .el-skeleton__item {
-  background: linear-gradient(90deg, #f2f2f2 25%, #e6e6e6 50%, #f2f2f2 75%);
-  background-size: 200% 100%;
-  animation: loading 1.5s infinite;
-}
-
-@keyframes loading {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
   }
 }
 </style>

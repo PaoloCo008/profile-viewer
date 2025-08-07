@@ -7,14 +7,17 @@ import { ElMessage } from 'element-plus'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-const user = ref<User>()
-
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
+
+const user = ref<User>()
+
 let abortController: AbortController | null = null
 
 onMounted(async () => {
+  console.log('Logging in onMounted')
+
   abortController = new AbortController()
 
   try {
@@ -25,9 +28,9 @@ onMounted(async () => {
     } else {
       ElMessage.error('User not found')
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Failed to fetch user:', err)
-    ElMessage.error(err.message || 'Failed to load user data')
+    ElMessage.error((err as Error).message || 'Failed to load user data')
   }
 })
 
@@ -131,7 +134,7 @@ onBeforeUnmount(() => {
 .back-button {
   padding: 8px 12px;
   color: #1890ff;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 500;
 }
 
@@ -152,7 +155,7 @@ onBeforeUnmount(() => {
   background: #1a1a1a;
   color: white;
   font-weight: bold;
-  font-size: 24px;
+  font-size: 1.5rem;
 }
 
 .user-name {
@@ -161,7 +164,7 @@ onBeforeUnmount(() => {
   justify-content: center;
   gap: 8px;
   margin: 0 0 8px 0;
-  font-size: 24px;
+  font-size: 1.5rem;
   font-weight: 600;
   color: #262626;
 }
@@ -169,7 +172,7 @@ onBeforeUnmount(() => {
 .user-email {
   margin: 0;
   color: #8c8c8c;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 .profile-content {
@@ -186,7 +189,7 @@ onBeforeUnmount(() => {
 
 .section-title {
   margin: 0 0 20px 0;
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 600;
   color: #262626;
   padding-bottom: 8px;
@@ -207,13 +210,13 @@ onBeforeUnmount(() => {
 }
 
 .detail-label {
-  font-size: 14px;
+  font-size: 0.875rem;
   color: #8c8c8c;
   font-weight: 400;
 }
 
 .detail-value {
-  font-size: 14px;
+  font-size: 0.875rem;
   color: #262626;
   font-weight: 400;
   word-break: break-word;
