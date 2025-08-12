@@ -2,13 +2,13 @@
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { ref, inject, type InjectionKey } from 'vue'
 
-const OperationStateKey: InjectionKey<{
+const OperationState: InjectionKey<{
   isOperationInProgress: () => boolean
 }> = Symbol('OperationState')
 
 const modalVisible = ref(false)
 
-function onTriggerClick() {
+function onTrigger() {
   modalVisible.value = true
 }
 
@@ -17,7 +17,7 @@ function closeModal() {
 }
 
 async function handleBeforeClose(done: () => void) {
-  const operationState = inject(OperationStateKey)
+  const operationState = inject(OperationState)
   const isOperationInProgress = operationState?.isOperationInProgress() || false
 
   if (isOperationInProgress) {
@@ -44,7 +44,7 @@ async function handleBeforeClose(done: () => void) {
 </script>
 
 <template>
-  <slot name="trigger" :onTriggerClick></slot>
+  <slot name="trigger" :onTrigger></slot>
 
   <Teleport to="body">
     <el-dialog
@@ -64,5 +64,11 @@ async function handleBeforeClose(done: () => void) {
 .el-dialog {
   width: 100%;
   max-width: 800px;
+  margin: 0;
+}
+
+.el-overlay-dialog {
+  display: grid;
+  place-items: center;
 }
 </style>

@@ -67,6 +67,8 @@ async function refreshUsers() {
 }
 
 onMounted(async () => {
+  console.log('Log on onMounted')
+
   abortController = new AbortController()
 
   try {

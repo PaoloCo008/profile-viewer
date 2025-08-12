@@ -13,8 +13,8 @@ export const useUserStore = defineStore('user', () => {
   const loading = ref(false)
 
   // Computed
-  const getUserById = computed(() => (id: string) => {
-    const user = users.value.find((user) => user.id === id)
+  const getUserById = computed(() => (userId: string) => {
+    const user = users.value.find((user) => user.id === userId)
     if (!user) return
     return user
   })

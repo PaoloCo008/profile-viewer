@@ -143,7 +143,7 @@ onUnmounted(() => {
               class="user-id-input"
               placeholder="Enter ID"
               min="1"
-              @keyup.enter="props.onTriggerClick"
+              @keyup.enter="props.onTrigger"
             />
           </template>
 
@@ -158,7 +158,7 @@ onUnmounted(() => {
           <template #trigger="props">
             <el-button
               class="action-btn primary"
-              @click="props.onTriggerClick"
+              @click="props.onTrigger"
               :disabled="userStore.loading"
               >Add</el-button
             >
@@ -173,7 +173,7 @@ onUnmounted(() => {
           <template #trigger="props">
             <el-button
               class="action-btn secondary"
-              @click="props.onTriggerClick"
+              @click="props.onTrigger"
               :disabled="!userId || userStore.loading"
             >
               Edit

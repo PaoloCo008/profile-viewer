@@ -4,7 +4,7 @@ import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import type { UserForm } from '@/lib/types/forms'
 import { useUserStore } from '@/stores/UserStore'
 
-const OperationStateKey: InjectionKey<{
+const OperationState: InjectionKey<{
   isOperationInProgress: () => boolean
 }> = Symbol('OperationState')
 
@@ -19,7 +19,7 @@ const isEditting = computed(() => !!props.userId)
 const isSubmitting = ref(false)
 const abortController = ref<AbortController | null>(null)
 
-provide(OperationStateKey, {
+provide(OperationState, {
   isOperationInProgress: () => isSubmitting.value || userStore.loading,
 })
 
@@ -40,21 +40,160 @@ const userForm = reactive<UserForm>({
 })
 
 const rules = reactive<FormRules<UserForm>>({
-  name: [{ required: true, message: 'Please enter your name.', trigger: 'blur' }],
-  username: [{ required: true, message: 'Please enter your username.', trigger: 'change' }],
-  email: [{ required: true, message: 'Please enter your email.', trigger: 'change' }],
-  street: [{ required: true, message: 'Please enter your street address.', trigger: 'change' }],
-  suite: [{ required: true, message: 'Please enter your suite.', trigger: 'change' }],
-  city: [{ required: true, message: 'Please enter your city.', trigger: 'change' }],
-  zipcode: [{ required: true, message: 'Please enter your zipcode.', trigger: 'change' }],
-  phone: [{ required: true, message: 'Please enter your phone number.', trigger: 'change' }],
-  website: [{ required: true, message: 'Please enter your website.', trigger: 'blur' }],
-  companyName: [{ required: true, message: 'Please enter your company name.', trigger: 'blur' }],
+  name: [
+    { required: true, message: 'Please enter your name.', trigger: 'blur' },
+    { min: 2, max: 50, message: 'Name must be between 2 and 50 characters.', trigger: 'blur' },
+    {
+      pattern: /^[a-zA-Z\s'-]+$/,
+      message: 'Name can only contain letters, spaces, hyphens, and apostrophes.',
+      trigger: 'blur',
+    },
+  ],
+
+  username: [
+    { required: true, message: 'Please enter your username.', trigger: 'change' },
+    {
+      min: 3,
+      max: 20,
+      message: 'Username must be between 3 and 20 characters.',
+      trigger: 'change',
+    },
+    {
+      pattern: /^[a-zA-Z0-9_-]+$/,
+      message: 'Username can only contain letters, numbers, underscores, and hyphens.',
+      trigger: 'change',
+    },
+  ],
+
+  email: [
+    { required: true, message: 'Please enter your email.', trigger: 'change' },
+    {
+      type: 'email',
+      message: 'Please enter a valid email address.',
+      trigger: 'change',
+    },
+    {
+      pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+      message: 'Please enter a valid email format.',
+      trigger: 'change',
+    },
+  ],
+
+  street: [
+    { required: true, message: 'Please enter your street address.', trigger: 'change' },
+    {
+      min: 5,
+      max: 100,
+      message: 'Street address must be between 5 and 100 characters.',
+      trigger: 'change',
+    },
+    {
+      pattern: /^[a-zA-Z0-9\s,.-]+$/,
+      message: 'Street address contains invalid characters.',
+      trigger: 'change',
+    },
+  ],
+
+  suite: [
+    { required: true, message: 'Please enter your suite/apartment number.', trigger: 'change' },
+    { max: 20, message: 'Suite cannot exceed 20 characters.', trigger: 'change' },
+    {
+      pattern: /^[a-zA-Z0-9\s-#]+$/,
+      message: 'Suite can only contain letters, numbers, spaces, hyphens, and #.',
+      trigger: 'change',
+    },
+  ],
+
+  city: [
+    { required: true, message: 'Please enter your city.', trigger: 'change' },
+    { min: 2, max: 50, message: 'City must be between 2 and 50 characters.', trigger: 'change' },
+    {
+      pattern: /^[a-zA-Z\s'-]+$/,
+      message: 'City can only contain letters, spaces, hyphens, and apostrophes.',
+      trigger: 'change',
+    },
+  ],
+
+  zipcode: [
+    { required: true, message: 'Please enter your zipcode.', trigger: 'change' },
+    {
+      pattern: /^[0-9]{5}(-[0-9]{4})?$|^[A-Za-z]\d[A-Za-z] \d[A-Za-z]\d$/,
+      message: 'Please enter a valid zipcode (12345, 12345-6789, or A1A 1A1 format).',
+      trigger: 'change',
+    },
+  ],
+
+  phone: [
+    { required: true, message: 'Please enter your phone number.', trigger: 'change' },
+    {
+      pattern: /^[\+]?[1-9][\d]{0,15}$|^\(\d{3}\)\s?\d{3}-\d{4}$|^\d{3}[-.]?\d{3}[-.]?\d{4}$/,
+      message: 'Please enter a valid phone number.',
+      trigger: 'change',
+    },
+  ],
+
+  website: [
+    { required: true, message: 'Please enter your website.', trigger: 'blur' },
+    {
+      pattern: /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/,
+      message: 'Please enter a valid website URL.',
+      trigger: 'blur',
+    },
+  ],
+
+  companyName: [
+    { required: true, message: 'Please enter your company name.', trigger: 'blur' },
+    {
+      min: 2,
+      max: 100,
+      message: 'Company name must be between 2 and 100 characters.',
+      trigger: 'blur',
+    },
+    {
+      pattern: /^[a-zA-Z0-9\s&.,'-]+$/,
+      message: 'Company name contains invalid characters.',
+      trigger: 'blur',
+    },
+  ],
+
   catchPhrase: [
     { required: true, message: 'Please enter your companies catch phrase.', trigger: 'blur' },
+    {
+      min: 10,
+      max: 200,
+      message: 'Catch phrase must be between 10 and 200 characters.',
+      trigger: 'blur',
+    },
+    {
+      validator: (rule, value, callback) => {
+        if (value && value.trim().split(' ').length < 3) {
+          callback(new Error('Catch phrase should contain at least 3 words.'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur',
+    },
   ],
+
   bs: [
-    { required: true, message: 'Please enter your business speak / strategy.', trigger: 'blur' },
+    { required: true, message: 'Please enter your business speak/strategy.', trigger: 'blur' },
+    {
+      min: 15,
+      max: 300,
+      message: 'Business strategy must be between 15 and 300 characters.',
+      trigger: 'blur',
+    },
+    {
+      validator: (rule, value, callback) => {
+        if (value && value.trim().split(' ').length < 5) {
+          callback(new Error('Business strategy should be more descriptive (at least 5 words).'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur',
+    },
   ],
 })
 
@@ -133,6 +272,8 @@ function resetForm(formEl: FormInstance | undefined) {
 // }
 
 onUnmounted(() => {
+  console.log('Log from onUnmounted')
+
   if (abortController.value) {
     abortController.value.abort()
   }
