@@ -29,3 +29,22 @@ export interface DisplayUser {
   email: string
   address: string
 }
+
+interface UserData {
+  id: string | number
+  name: string
+}
+
+interface Comment {
+  id: number
+  body: string
+  author: CommentAuthor
+  created: string
+  upvoted: boolean
+  downvoted: boolean
+  commented: boolean
+  upvotes: number
+  downvotes: number
+  comments: number
+  replies: Comment[]
+}

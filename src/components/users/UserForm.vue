@@ -126,7 +126,8 @@ const rules = reactive<FormRules<UserForm>>({
   phone: [
     { required: true, message: 'Please enter your phone number.', trigger: 'change' },
     {
-      pattern: /^[\+]?[1-9][\d]{0,15}$|^\(\d{3}\)\s?\d{3}-\d{4}$|^\d{3}[-.]?\d{3}[-.]?\d{4}$/,
+      pattern:
+        /^[\+]?[(]?[\+]?\d{1,4}[)]?[\s\-]?[(]?\d{1,6}[)]?[\s\-]?\d{1,6}[\s\-]?\d{1,6}[\s\-]?\d{0,6}$/,
       message: 'Please enter a valid phone number.',
       trigger: 'change',
     },

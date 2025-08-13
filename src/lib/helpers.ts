@@ -26,3 +26,51 @@ export function getInitials(name: string) {
     .toUpperCase()
     .slice(0, 2)
 }
+
+export function createNameFromEmail(email: string): string {
+  const emailUsername = email.split('@')[0]
+
+  let firstName: string
+  let lastName: string
+
+  if (emailUsername.includes('.') || emailUsername.includes('_')) {
+    const parts = emailUsername.split(/[._]/)
+    firstName = parts[0]
+    lastName = parts[1] || emailUsername.split('@')[1]?.split('.')[0] || 'User'
+  } else {
+    firstName = emailUsername
+    lastName = email.split('@')[1]?.split('.')[0] || 'User'
+  }
+
+  const capitalize = (str: string): string =>
+    str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
+  return `${capitalize(firstName)} ${capitalize(lastName)}`
+}
+
+export function randomCommentCount(maxComments: number) {
+  const random = Math.random()
+  if (random < 0.2) return 0
+  if (random < 0.4) return Math.floor(Math.random() * 2) + 1
+  if (random < 0.7) return Math.floor(Math.random() * 3) + 2
+  return Math.floor(Math.random() * (maxComments - 2)) + 3
+}
+
+export async function fetchWithErrorHandling(
+  url: string,
+  errorMessage: string,
+  controller: AbortController,
+) {
+  const res = await fetch(url, { signal: controller?.signal })
+  if (!res.ok) {
+    handleApiError(res, errorMessage)
+    return null
+  }
+  return res.json()
+}
+
+export function toSingleDecimal(num: number) {
+  while (num >= 1) {
+    num = num / 10
+  }
+  return Math.round(num * 10) / 10
+}
