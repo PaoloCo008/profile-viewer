@@ -7,13 +7,14 @@ import UserDraggableActions from './users/UserDraggableActions.vue'
 import { Grid3x3, Plus, Table } from 'lucide-vue-next'
 import { ElMessage } from 'element-plus'
 import AppSearch from './app/AppSearch.vue'
+import useLocalStorage from '@/composables/useLocalStorage'
 
 let abortController: AbortController | null = null
 
 const userStore = useUserStore()
 
 const isRefreshing = ref(false)
-const viewMode = ref<'table' | 'grid'>('table')
+const viewMode = useLocalStorage<'table' | 'grid'>('view', 'table')
 const floatingPanelVisible = ref(false)
 
 const users = computed(() =>

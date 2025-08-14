@@ -3,6 +3,8 @@ import { computed, reactive, ref, provide, onUnmounted, type InjectionKey } from
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import type { UserForm } from '@/lib/types/forms'
 import { useUserStore } from '@/stores/UserStore'
+import { stringValidator } from '@/lib/validators'
+import { phonePatterns, websitePatterns, zipcodePatters } from '@/lib/constants'
 
 const OperationState: InjectionKey<{
   isOperationInProgress: () => boolean
@@ -41,26 +43,27 @@ const userForm = reactive<UserForm>({
 
 const rules = reactive<FormRules<UserForm>>({
   name: [
-    { required: true, message: 'Please enter your name.', trigger: 'blur' },
-    { min: 2, max: 50, message: 'Name must be between 2 and 50 characters.', trigger: 'blur' },
+    { required: true, message: 'Please enter your name.', trigger: 'change' },
     {
-      pattern: /^[a-zA-Z\s'-]+$/,
-      message: 'Name can only contain letters, spaces, hyphens, and apostrophes.',
-      trigger: 'blur',
+      validator: stringValidator('Name', {
+        minLength: 2,
+        maxLength: 50,
+        pattern: /^[a-zA-Z\s'-]+$/,
+        patternMessage: 'Name can only contain letters, spaces, hyphens, and apostrophes.',
+      }),
+      trigger: 'change',
     },
   ],
 
   username: [
     { required: true, message: 'Please enter your username.', trigger: 'change' },
     {
-      min: 3,
-      max: 20,
-      message: 'Username must be between 3 and 20 characters.',
-      trigger: 'change',
-    },
-    {
-      pattern: /^[a-zA-Z0-9_-]+$/,
-      message: 'Username can only contain letters, numbers, underscores, and hyphens.',
+      validator: stringValidator('Username', {
+        minLength: 3,
+        maxLength: 20,
+        pattern: /^[a-zA-Z0-9_-]+$/,
+        patternMessage: 'Username can only contain letters, numbers, underscores, and hyphens.',
+      }),
       trigger: 'change',
     },
   ],
@@ -73,8 +76,12 @@ const rules = reactive<FormRules<UserForm>>({
       trigger: 'change',
     },
     {
-      pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-      message: 'Please enter a valid email format.',
+      validator: stringValidator('Email', {
+        minLength: 5,
+        maxLength: 254,
+        pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+        patternMessage: 'Please enter a valid email format.',
+      }),
       trigger: 'change',
     },
   ],
@@ -82,34 +89,39 @@ const rules = reactive<FormRules<UserForm>>({
   street: [
     { required: true, message: 'Please enter your street address.', trigger: 'change' },
     {
-      min: 5,
-      max: 100,
-      message: 'Street address must be between 5 and 100 characters.',
-      trigger: 'change',
-    },
-    {
-      pattern: /^[a-zA-Z0-9\s,.-]+$/,
-      message: 'Street address contains invalid characters.',
+      validator: stringValidator('Street Address', {
+        minLength: 5,
+        maxLength: 150,
+        pattern: /^[a-zA-Z0-9\s,.-]+$/,
+        patternMessage:
+          'Street Address can only contain letters, numbers, commas, periods, and hyphens.',
+      }),
       trigger: 'change',
     },
   ],
 
   suite: [
-    { required: true, message: 'Please enter your suite/apartment number.', trigger: 'change' },
-    { max: 20, message: 'Suite cannot exceed 20 characters.', trigger: 'change' },
     {
-      pattern: /^[a-zA-Z0-9\s-#]+$/,
-      message: 'Suite can only contain letters, numbers, spaces, hyphens, and #.',
+      validator: stringValidator('Suite/apartment number', {
+        maxLength: 20,
+        pattern: /^[a-zA-Z0-9\s-#.]+$/,
+        patternMessage:
+          'Suite/apartment number can only contain letters, numbers, spaces, hyphens, and #.',
+        required: false,
+      }),
       trigger: 'change',
     },
   ],
 
   city: [
     { required: true, message: 'Please enter your city.', trigger: 'change' },
-    { min: 2, max: 50, message: 'City must be between 2 and 50 characters.', trigger: 'change' },
     {
-      pattern: /^[a-zA-Z\s'-]+$/,
-      message: 'City can only contain letters, spaces, hyphens, and apostrophes.',
+      validator: stringValidator('City', {
+        minLength: 2,
+        maxLength: 50,
+        pattern: /^[a-zA-Z\s'-]+$/,
+        patternMessage: 'City can only contain letters, spaces, hyphens, and apostrophes.',
+      }),
       trigger: 'change',
     },
   ],
@@ -117,8 +129,12 @@ const rules = reactive<FormRules<UserForm>>({
   zipcode: [
     { required: true, message: 'Please enter your zipcode.', trigger: 'change' },
     {
-      pattern: /^[0-9]{5}(-[0-9]{4})?$|^[A-Za-z]\d[A-Za-z] \d[A-Za-z]\d$/,
-      message: 'Please enter a valid zipcode (12345, 12345-6789, or A1A 1A1 format).',
+      validator: stringValidator('Zipcode', {
+        minLength: 3,
+        maxLength: 12,
+        pattern: zipcodePatters,
+        patternMessage: 'Please enter a valid zipcode format.',
+      }),
       trigger: 'change',
     },
   ],
@@ -126,44 +142,49 @@ const rules = reactive<FormRules<UserForm>>({
   phone: [
     { required: true, message: 'Please enter your phone number.', trigger: 'change' },
     {
-      pattern:
-        /^[\+]?[(]?[\+]?\d{1,4}[)]?[\s\-]?[(]?\d{1,6}[)]?[\s\-]?\d{1,6}[\s\-]?\d{1,6}[\s\-]?\d{0,6}$/,
-      message: 'Please enter a valid phone number.',
+      validator: stringValidator('Phone Number', {
+        minLength: 7,
+        maxLength: 25,
+        pattern: phonePatterns,
+        patternMessage:
+          'Please enter a valid phone number (7-25 characters, digits and basic formatting allowed).',
+      }),
       trigger: 'change',
     },
   ],
 
   website: [
-    { required: true, message: 'Please enter your website.', trigger: 'blur' },
     {
-      pattern: /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/,
-      message: 'Please enter a valid website URL.',
-      trigger: 'blur',
+      validator: stringValidator('Website URL', {
+        maxLength: 200,
+        pattern: websitePatterns,
+        patternMessage: 'Please enter a valid website URL.',
+        required: false,
+      }),
+      trigger: 'change',
     },
   ],
 
   companyName: [
-    { required: true, message: 'Please enter your company name.', trigger: 'blur' },
+    { required: true, message: 'Please enter your company name.', trigger: 'change' },
     {
-      min: 2,
-      max: 100,
-      message: 'Company name must be between 2 and 100 characters.',
-      trigger: 'blur',
-    },
-    {
-      pattern: /^[a-zA-Z0-9\s&.,'-]+$/,
-      message: 'Company name contains invalid characters.',
-      trigger: 'blur',
+      validator: stringValidator('Company name', {
+        minLength: 2,
+        maxLength: 100,
+        pattern: /^[a-zA-Z0-9\s&.,'-]+$/,
+        patternMessage: 'Company name contains invalid characters.',
+      }),
+      trigger: 'change',
     },
   ],
 
   catchPhrase: [
-    { required: true, message: 'Please enter your companies catch phrase.', trigger: 'blur' },
     {
-      min: 10,
-      max: 200,
-      message: 'Catch phrase must be between 10 and 200 characters.',
-      trigger: 'blur',
+      validator: stringValidator('Company catch phrase', {
+        maxLength: 200,
+        required: false,
+      }),
+      trigger: 'change',
     },
     {
       validator: (rule, value, callback) => {
@@ -173,17 +194,17 @@ const rules = reactive<FormRules<UserForm>>({
           callback()
         }
       },
-      trigger: 'blur',
+      trigger: 'change',
     },
   ],
 
   bs: [
-    { required: true, message: 'Please enter your business speak/strategy.', trigger: 'blur' },
     {
-      min: 15,
-      max: 300,
-      message: 'Business strategy must be between 15 and 300 characters.',
-      trigger: 'blur',
+      validator: stringValidator('Business speak/strategy', {
+        maxLength: 300,
+        required: false,
+      }),
+      trigger: 'change',
     },
     {
       validator: (rule, value, callback) => {
@@ -193,7 +214,7 @@ const rules = reactive<FormRules<UserForm>>({
           callback()
         }
       },
-      trigger: 'blur',
+      trigger: 'change',
     },
   ],
 })
