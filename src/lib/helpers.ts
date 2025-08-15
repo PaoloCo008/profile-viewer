@@ -74,3 +74,28 @@ export function toSingleDecimal(num: number) {
   }
   return Math.round(num * 10) / 10
 }
+
+export function trimFormValues(formValues: Record<string, unknown>) {
+  Object.entries(formValues).forEach(([key, value]) => {
+    if (typeof value === 'string') {
+      formValues[key] = value.trim()
+    }
+  })
+}
+
+export async function getGlobalPostalCodes(cityName: string) {
+  const response = await fetch(
+    `https://public.opendatasoft.com/api/records/1.0/search/?dataset=geonames-postal-code&q=${encodeURIComponent(cityName)}&rows=50`,
+  )
+  const data = await response.json()
+
+  return (
+    data.records?.map((record) => ({
+      postalCode: record.fields.postal_code,
+      placeName: record.fields.place_name,
+      countryCode: record.fields.country_code,
+      adminName1: record.fields.admin_name1,
+      coordinates: record.geometry?.coordinates,
+    })) || []
+  )
+}

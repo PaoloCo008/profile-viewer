@@ -3,9 +3,16 @@ export const JSON_PLACEHOLDER_ENDPOINT = 'https://jsonplaceholder.typicode.com'
 
 export const zipcodePatters = [
   /^[0-9]{5}(-[0-9]{4})?$/,
+
   /^[A-Za-z]\d[A-Za-z][\s-]?\d[A-Za-z]\d$/,
+
+  /^[A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2}$/i,
+
+  /^\d{4}\s?[A-Z]{2}$/i,
+
   /^[0-9]{4,5}$/,
-  /^[A-Za-z0-9\s-]{3,12}$/,
+
+  /^[A-Z0-9]{3,10}(\s?[A-Z0-9]{2,4})?$/i,
 ]
 
 export const phonePatterns = [
@@ -13,11 +20,4 @@ export const phonePatterns = [
   /^\+[1-9]\d{1,14}$/,
   /^[\+]?[(]?[\+]?\d{1,4}[)]?[\s\-]?[(]?\d{1,6}[)]?[\s\-]?\d{1,6}[\s\-]?\d{1,6}[\s\-]?\d{0,6}$/,
   /^\d{7,15}$/,
-]
-
-export const websitePatterns = [
-  /^https?:\/\/[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}(\/[a-zA-Z0-9._~:/?#[\]@!$&'()*+,;=%-]*)?$/,
-  /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/,
-  /^https?:\/\/localhost(:[0-9]+)?(\/.*)?$/,
-  /^https?:\/\/127\.0\.0\.1(:[0-9]+)?(\/.*)?$/,
 ]

@@ -1,10 +1,11 @@
 <script lang="ts" setup>
-import { computed, reactive, ref, provide, onUnmounted, type InjectionKey } from 'vue'
+import { watch, computed, reactive, ref, provide, onUnmounted, type InjectionKey } from 'vue'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import type { UserForm } from '@/lib/types/forms'
 import { useUserStore } from '@/stores/UserStore'
 import { stringValidator } from '@/lib/validators'
-import { phonePatterns, websitePatterns, zipcodePatters } from '@/lib/constants'
+import { phonePatterns, zipcodePatters } from '@/lib/constants'
+import { trimFormValues } from '@/lib/helpers'
 
 const OperationState: InjectionKey<{
   isOperationInProgress: () => boolean
@@ -27,18 +28,18 @@ provide(OperationState, {
 
 const userFormRef = ref<FormInstance>()
 const userForm = reactive<UserForm>({
-  name: user?.name || 'test',
+  name: user?.name || 'Paolo Co',
   username: user?.username || 'test',
-  email: user?.email || 'test',
-  street: user?.address.street || 'test',
+  email: user?.email || 'paolohenry008@gmail.com',
+  street: user?.address.street || '38 Silver Road',
   suite: user?.address.suite || 'test',
   city: user?.address.city || 'test',
   zipcode: user?.address.zipcode || 'test',
-  phone: user?.phone || 'test',
-  website: user?.website || 'test',
+  phone: user?.phone || '09178777471',
+  website: user?.website || 'facebook.com',
   companyName: user?.company.name || 'test',
-  catchPhrase: user?.company.catchPhrase || 'test',
-  bs: user?.company.bs || 'test',
+  catchPhrase: user?.company.catchPhrase || '',
+  bs: user?.company.bs || '',
 })
 
 const rules = reactive<FormRules<UserForm>>({
@@ -48,7 +49,7 @@ const rules = reactive<FormRules<UserForm>>({
       validator: stringValidator('Name', {
         minLength: 2,
         maxLength: 50,
-        pattern: /^[a-zA-Z\s'-]+$/,
+        pattern: /^[\p{L}\s'-]+$/u,
         patternMessage: 'Name can only contain letters, spaces, hyphens, and apostrophes.',
       }),
       trigger: 'change',
@@ -71,11 +72,6 @@ const rules = reactive<FormRules<UserForm>>({
   email: [
     { required: true, message: 'Please enter your email.', trigger: 'change' },
     {
-      type: 'email',
-      message: 'Please enter a valid email address.',
-      trigger: 'change',
-    },
-    {
       validator: stringValidator('Email', {
         minLength: 5,
         maxLength: 254,
@@ -92,7 +88,7 @@ const rules = reactive<FormRules<UserForm>>({
       validator: stringValidator('Street Address', {
         minLength: 5,
         maxLength: 150,
-        pattern: /^[a-zA-Z0-9\s,.-]+$/,
+        pattern: /^[\p{L}\p{N}\s,.-]+$/u,
         patternMessage:
           'Street Address can only contain letters, numbers, commas, periods, and hyphens.',
       }),
@@ -104,9 +100,9 @@ const rules = reactive<FormRules<UserForm>>({
     {
       validator: stringValidator('Suite/apartment number', {
         maxLength: 20,
-        pattern: /^[a-zA-Z0-9\s-#.]+$/,
+        pattern: /^[\p{L}\p{N}\s#-.,]+$/u,
         patternMessage:
-          'Suite/apartment number can only contain letters, numbers, spaces, hyphens, and #.',
+          'Suite/apartment number can only contain letters, numbers, spaces, hyphens, #, periods, and commas.',
         required: false,
       }),
       trigger: 'change',
@@ -119,8 +115,8 @@ const rules = reactive<FormRules<UserForm>>({
       validator: stringValidator('City', {
         minLength: 2,
         maxLength: 50,
-        pattern: /^[a-zA-Z\s'-]+$/,
-        patternMessage: 'City can only contain letters, spaces, hyphens, and apostrophes.',
+        pattern: /^[\p{L}\s'.-]+$/u,
+        patternMessage: 'City can only contain letters, spaces, hyphens, apostrophes, and periods.',
       }),
       trigger: 'change',
     },
@@ -157,7 +153,7 @@ const rules = reactive<FormRules<UserForm>>({
     {
       validator: stringValidator('Website URL', {
         maxLength: 200,
-        pattern: websitePatterns,
+        pattern: /^(https?:\/\/)?([a-zA-Z0-9.-]+\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(\/[^\s]*)?$/i,
         patternMessage: 'Please enter a valid website URL.',
         required: false,
       }),
@@ -171,7 +167,7 @@ const rules = reactive<FormRules<UserForm>>({
       validator: stringValidator('Company name', {
         minLength: 2,
         maxLength: 100,
-        pattern: /^[a-zA-Z0-9\s&.,'-]+$/,
+        pattern: /^[\p{L}\p{N}\s&.,'-]+$/u,
         patternMessage: 'Company name contains invalid characters.',
       }),
       trigger: 'change',
@@ -223,6 +219,8 @@ async function submitForm(formEl: FormInstance | undefined) {
   if (!formEl || isSubmitting.value) return
 
   try {
+    trimFormValues(userForm)
+
     try {
       await formEl.validate()
     } catch {
@@ -239,7 +237,10 @@ async function submitForm(formEl: FormInstance | undefined) {
         message: 'User successfully updated',
       })
     } else {
-      await userStore.createUser({ ...userForm }, abortController.value)
+      await userStore.createUser(
+        { ...userForm, zipcode: userForm.zipcode.toUpperCase() },
+        abortController.value,
+      )
       ElMessage({
         type: 'success',
         message: 'User successfully created',
@@ -292,6 +293,35 @@ function resetForm(formEl: FormInstance | undefined) {
 //     isSubmitting.value = false
 //   }
 // }
+import { useGlobalCitySearch } from '@/composables/useGlobalCitySearch'
+
+const { searchCityPostalCodes, loading: citySearchLoading } = useGlobalCitySearch()
+const postalCodeSuggestions = ref<any[]>([])
+
+// Watch city input and fetch postal codes
+watch(
+  () => userForm.city,
+  async (newCity) => {
+    if (newCity && newCity.length > 2) {
+      const results = await searchCityPostalCodes(newCity)
+      postalCodeSuggestions.value = results
+
+      // Auto-fill if exact match found
+      const exactMatch = results.find((r) => r.placeName.toLowerCase() === newCity.toLowerCase())
+      if (exactMatch && results.length === 1) {
+        userForm.zipcode = exactMatch.postalCode
+      }
+    }
+  },
+  { debounce: 500 },
+)
+
+// Function to select postal code from suggestions
+const selectPostalCode = (suggestion: any) => {
+  userForm.zipcode = suggestion.postalCode
+  userForm.city = suggestion.placeName
+  // Optionally set country/state too
+}
 
 onUnmounted(() => {
   console.log('Log from onUnmounted')
@@ -352,12 +382,43 @@ onUnmounted(() => {
         <el-row :gutter="16">
           <el-col :span="18">
             <el-form-item label="City" prop="city">
-              <el-input v-model="userForm.city" :disabled="isSubmitting || userStore.loading" />
+              <el-input
+                v-model="userForm.city"
+                :disabled="isSubmitting || userStore.loading"
+                placeholder="Enter city name"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="6">
             <el-form-item label="Zipcode" prop="zipcode">
-              <el-input v-model="userForm.zipcode" :disabled="isSubmitting || userStore.loading" />
+              <el-autocomplete
+                v-model="userForm.zipcode"
+                :fetch-suggestions="
+                  (query, cb) => {
+                    const suggestions = postalCodeSuggestions.map((item) => ({
+                      value: item.postalCode,
+                      label: `${item.postalCode} - ${item.fullAddress}`,
+                    }))
+                    cb(suggestions)
+                  }
+                "
+                :disabled="isSubmitting || userStore.loading"
+                placeholder="Enter zipcode or select from suggestions"
+                @select="(item) => (userForm.zipcode = item.value)"
+                style="width: 100%"
+              >
+                <template #default="{ item }">
+                  <div>
+                    <strong>{{ item.value }}</strong>
+                    <br />
+                    <small>{{ item.label.split(' - ')[1] }}</small>
+                  </div>
+                </template>
+              </el-autocomplete>
+
+              <div v-if="citySearchLoading" class="text-sm text-gray-500 mt-1">
+                Searching postal codes...
+              </div>
             </el-form-item>
           </el-col>
         </el-row>
