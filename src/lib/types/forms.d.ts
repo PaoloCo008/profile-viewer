@@ -12,3 +12,10 @@ export interface UserForm {
   catchPhrase: string
   bs: string
 }
+
+export interface ValidationError {
+  message: string
+  field: string
+}
+
+export type ValidationErrors = Record<string, string[]>

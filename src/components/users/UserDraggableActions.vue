@@ -26,7 +26,31 @@ function closePanel() {
   emit('close')
 }
 
+function handleEditUser(onTrigger: () => void) {
+  const user = userStore.getUserById(String(userId.value))
+
+  if (!user) {
+    ElMessage({
+      type: 'error',
+      message: `User with ID ${userId.value} does not exist`,
+    })
+    return
+  } else {
+    onTrigger()
+  }
+}
+
 async function handleDelete() {
+  const user = userStore.getUserById(String(userId.value))
+
+  if (!user) {
+    ElMessage({
+      type: 'error',
+      message: `User with ID ${userId.value} does not exist`,
+    })
+    return
+  }
+
   try {
     await ElMessageBox.confirm(
       `Are you sure you want to delete user ${String(userId.value)}?`,
@@ -173,7 +197,7 @@ onUnmounted(() => {
           <template #trigger="props">
             <el-button
               class="action-btn secondary"
-              @click="props.onTrigger"
+              @click="handleEditUser(props.onTrigger)"
               :disabled="!userId || userStore.loading"
             >
               Edit
@@ -196,13 +220,12 @@ onUnmounted(() => {
         </button>
       </div>
     </div>
-  </div>
-
-  <div class="drag-handle">
-    <div class="drag-dots">
-      <div class="dot"></div>
-      <div class="dot"></div>
-      <div class="dot"></div>
+    <div class="drag-handle">
+      <div class="drag-dots">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
     </div>
   </div>
 </template>

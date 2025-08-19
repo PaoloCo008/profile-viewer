@@ -250,8 +250,8 @@ onBeforeUnmount(() => {
 
 .floating-action-btn {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
+  bottom: 28px;
+  right: 20px;
   width: 56px;
   height: 56px;
   background: #1a1a1a;
@@ -299,8 +299,8 @@ onBeforeUnmount(() => {
   }
 
   .floating-action-btn {
-    bottom: 32px;
-    right: 32px;
+    right: 28px;
+    bottom: 28px;
   }
 }
 
@@ -360,6 +360,11 @@ onBeforeUnmount(() => {
     padding: 8px 16px;
   }
 
+  .floating-action-btn {
+    right: 34px;
+    bottom: 34px;
+  }
+
   .view-content {
     border-radius: 10px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -399,10 +404,8 @@ onBeforeUnmount(() => {
   }
 
   .floating-action-btn {
-    width: 64px;
-    height: 64px;
-    bottom: 40px;
-    right: 40px;
+    right: 60px;
+    bottom: 60px;
   }
 
   .fab-icon {

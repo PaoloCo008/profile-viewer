@@ -17,7 +17,8 @@ function handleSearch(queryString: string, callback: (results: DisplayUser[]) =>
   const queries = queryString.toLowerCase().split(/\s+/)
 
   const results = queries.reduce((acc, query) => {
-    const regex = new RegExp(`^${query}|${query}`, 'gim')
+    const cleanQuery = query.replace(/^@/, '')
+    const regex = new RegExp(`^${cleanQuery}|${cleanQuery}`, 'gim')
     const filterFields = ['name', 'email', 'username']
 
     return acc.filter((user) => {

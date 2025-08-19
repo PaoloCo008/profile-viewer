@@ -1,55 +1,76 @@
-// composables/useGlobalCitySearch.ts
+import type {
+  GeoNamesPostalCode,
+  GeoNamesResponse,
+  PostalCodeSuggestion,
+} from '@/lib/types/geoNames'
+import type { UseGlobalCitySearchReturn } from '@/lib/types/global'
 import { ref } from 'vue'
 
-export function useGlobalCitySearch() {
-  const loading = ref(false)
+export function useGlobalCitySearch(): UseGlobalCitySearchReturn {
+  const loading = ref<boolean>(false)
   const error = ref<string | null>(null)
+  const geoNamesUsername = 'paolo008'
 
-  const searchCityPostalCodes = async (cityName: string) => {
+  const searchCityPostalCodes = async (cityName: string): Promise<PostalCodeSuggestion[]> => {
     if (!cityName || cityName.length < 2) return []
 
     loading.value = true
     error.value = null
 
     try {
-      // Try OpenDataSoft first (no registration needed)
       const response = await fetch(
-        `https://public.opendatasoft.com/api/records/1.0/search/?dataset=geonames-postal-code&q=${encodeURIComponent(cityName)}&rows=20`,
+        `http://api.geonames.org/postalCodeSearchJSON?placename=${encodeURIComponent(cityName)}&username=${geoNamesUsername}&maxRows=20`,
       )
 
-      if (!response.ok) throw new Error('Failed to fetch data')
+      if (!response.ok) {
+        throw new Error(`API unavailable (${response.status})`)
+      }
 
-      const data = await response.json()
+      const data: GeoNamesResponse = await response.json()
 
-      const results =
-        data.records?.map((record: any) => ({
-          postalCode: record.fields.postal_code,
-          placeName: record.fields.place_name,
-          countryCode: record.fields.country_code,
-          adminName1: record.fields.admin_name1,
-          fullAddress: `${record.fields.place_name}, ${record.fields.admin_name1}, ${record.fields.country_code}`,
-          coordinates: record.geometry?.coordinates,
+      if (data.status) {
+        throw new Error(data.status.message || 'GeoNames API error')
+      }
+
+      const results: PostalCodeSuggestion[] =
+        data.postalCodes?.map((postal: GeoNamesPostalCode) => ({
+          postalCode: postal.postalCode,
+          placeName: postal.placeName,
+          countryCode: postal.countryCode,
+          adminName1: postal.adminName1,
+          fullAddress:
+            `${postal.placeName}, ${postal.adminName1 || ''}, ${postal.countryCode}`.replace(
+              ', ,',
+              ',',
+            ),
+          coordinates: [postal.lat, postal.lng] as [number, number],
         })) || []
 
-      // Remove duplicates and sort by relevance
-      const unique = results.filter(
-        (item, index, self) =>
-          index ===
-          self.findIndex((t) => t.postalCode === item.postalCode && t.placeName === item.placeName),
+      const unique = Array.from(
+        new Map(results.map((item) => [`${item.postalCode}-${item.placeName}`, item])).values(),
       )
 
-      return unique.slice(0, 10) // Limit to 10 results
+      if (unique.length === 0) {
+        error.value = 'No postal codes found for this city'
+      }
+
+      return unique.slice(0, 10)
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to search postal codes'
+      error.value = err instanceof Error ? err.message : 'Unable to search postal codes'
       return []
     } finally {
       loading.value = false
     }
   }
 
+  const clearError = (): void => {
+    error.value = null
+  }
+
   return {
     loading,
     error,
     searchCityPostalCodes,
+    clearError,
   }
 }

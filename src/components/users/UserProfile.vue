@@ -7,12 +7,13 @@ import { ElMessage } from 'element-plus'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import UserComments from './UserComments.vue'
+import TheCatchAllPage from '../TheCatchAllPage.vue'
 
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
 
-const user = ref<User>()
+const user = ref<User | null>(null)
 const comments = ref<Comment[]>()
 
 let abortController: AbortController | null = null
@@ -168,6 +169,13 @@ onBeforeUnmount(() => {
           </template>
         </div>
       </div>
+    </div>
+
+    <div v-else>
+      <TheCatchAllPage
+        empty-state-title="User Not Found"
+        empty-state-description="The user you are finding is either deleted or doesn't exist."
+      />
     </div>
   </div>
 </template>

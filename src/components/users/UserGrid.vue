@@ -4,121 +4,169 @@ import type { DisplayUser } from '@/lib/types/global'
 import { getInitials } from '@/lib/helpers'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/UserStore'
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
+import useSearchParams from '@/composables/useSearchParams'
 
 const props = defineProps<{ users: DisplayUser[] }>()
 
 const router = useRouter()
 const userStore = useUserStore()
 
-const currentPage = ref(1)
-const pageSize = ref(12)
+const currentPage = useSearchParams('page', '1', 'home')
+const pageSize = useSearchParams('size', '12', 'home')
+
+const currentPageNum = computed(() => Number(currentPage.value) || 1)
+const pageSizeNum = computed(() => Number(pageSize.value) || 12)
 
 const paginatedUsers = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value
-  const end = start + pageSize.value
-  return props.users.slice(start, end)
+  return userStore.getPaginatedUsers(currentPageNum.value, pageSizeNum.value, props.users)
 })
 
+const totalUsers = computed(() => userStore.totalUsers)
+
 const handleCurrentChange = (page: number) => {
-  currentPage.value = page
+  currentPage.value = String(page)
 }
 
 const handleSizeChange = (size: number) => {
-  pageSize.value = size
-  currentPage.value = 1
+  pageSize.value = String(size)
+  currentPage.value = '1'
 }
 </script>
 
 <template>
   <div class="user-container">
-    <div v-if="userStore.loading" class="user-grid">
-      <div v-for="n in 12" :key="n" class="skeleton-card">
-        <el-skeleton animated>
-          <template #template>
-            <div class="skeleton-card-header">
-              <div class="skeleton-user-info">
-                <el-skeleton-item variant="circle" class="skeleton-avatar" />
-                <div class="skeleton-user-details">
-                  <el-skeleton-item variant="h3" class="skeleton-name" />
-                  <el-skeleton-item variant="text" class="skeleton-id" />
+    <div class="content-area">
+      <div v-if="userStore.loading" class="user-grid">
+        <div v-for="n in 12" :key="n" class="skeleton-card">
+          <el-skeleton animated>
+            <template #template>
+              <div class="skeleton-card-header">
+                <div class="skeleton-user-info">
+                  <el-skeleton-item variant="circle" class="skeleton-avatar" />
+                  <div class="skeleton-user-details">
+                    <el-skeleton-item variant="h3" class="skeleton-name" />
+                    <el-skeleton-item variant="text" class="skeleton-id" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="skeleton-card-content">
+                <div class="skeleton-info-item">
+                  <el-skeleton-item variant="circle" class="skeleton-icon" />
+                  <el-skeleton-item variant="text" class="skeleton-email" />
+                </div>
+                <div class="skeleton-info-item">
+                  <el-skeleton-item variant="circle" class="skeleton-icon" />
+                  <el-skeleton-item variant="text" class="skeleton-address" />
+                </div>
+              </div>
+            </template>
+          </el-skeleton>
+        </div>
+      </div>
+
+      <div v-else>
+        <div class="user-grid">
+          <div
+            v-for="user in paginatedUsers"
+            :key="user.id"
+            class="user-card"
+            @click="router.push({ name: 'user-profile', params: { userId: user.id } })"
+          >
+            <div class="card-header">
+              <div class="user-info">
+                <div class="user-avatar">
+                  {{ getInitials(user.name) }}
+                </div>
+                <div class="user-details">
+                  <h3 class="user-name">{{ user.name }}</h3>
+                  <span class="user-id">ID: {{ user.id }}</span>
                 </div>
               </div>
             </div>
 
-            <div class="skeleton-card-content">
-              <div class="skeleton-info-item">
-                <el-skeleton-item variant="circle" class="skeleton-icon" />
-                <el-skeleton-item variant="text" class="skeleton-email" />
+            <div class="card-content">
+              <div class="info-item">
+                <el-icon class="info-icon">
+                  <Message />
+                </el-icon>
+                <span class="info-text">{{ user.email }}</span>
               </div>
-              <div class="skeleton-info-item">
-                <el-skeleton-item variant="circle" class="skeleton-icon" />
-                <el-skeleton-item variant="text" class="skeleton-address" />
-              </div>
-            </div>
-          </template>
-        </el-skeleton>
-      </div>
-    </div>
 
-    <div v-else>
-      <div class="user-grid">
-        <div
-          v-for="user in paginatedUsers"
-          :key="user.id"
-          class="user-card"
-          @click="router.push({ name: 'user-profile', params: { userId: user.id } })"
-        >
-          <div class="card-header">
-            <div class="user-info">
-              <div class="user-avatar">
-                {{ getInitials(user.name) }}
+              <div class="info-item">
+                <el-icon class="info-icon">
+                  <Location />
+                </el-icon>
+                <span class="info-text">{{ user.address }}</span>
               </div>
-              <div class="user-details">
-                <h3 class="user-name">{{ user.name }}</h3>
-                <span class="user-id">ID: {{ user.id }}</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="card-content">
-            <div class="info-item">
-              <el-icon class="info-icon">
-                <Message />
-              </el-icon>
-              <span class="info-text">{{ user.email }}</span>
-            </div>
-
-            <div class="info-item">
-              <el-icon class="info-icon">
-                <Location />
-              </el-icon>
-              <span class="info-text">{{ user.address }}</span>
             </div>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Pagination -->
-      <div class="pagination-container">
-        <el-pagination
-          v-model:current-page="currentPage"
-          v-model:page-size="pageSize"
-          :page-sizes="[12, 24, 36, 48]"
-          :total="users.length"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-        />
-      </div>
+    <div class="pagination-fixed">
+      <el-pagination
+        :current-page="currentPageNum"
+        :page-size="pageSizeNum"
+        :page-sizes="[12, 24, 36, 48]"
+        :total="totalUsers"
+        layout="total, sizes, prev, pager, next, jumper"
+        small
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        class="pagination"
+      />
     </div>
   </div>
 </template>
 
 <style scoped>
 .user-container {
+  height: calc(100vh - 230px);
+  display: flex;
+  flex-direction: column;
   padding: 12px;
-  min-height: 100vh;
+  max-width: 1900px;
+  margin: 0 auto;
+  width: 100%;
+  overflow: hidden;
+}
+
+.content-area {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* Bottom Pagination */
+.pagination-fixed {
+  margin-top: auto;
+  padding: 20px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pagination-fixed :deep(.el-pagination) {
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.pagination-fixed :deep(.el-pagination .btn-prev),
+.pagination-fixed :deep(.el-pagination .btn-next),
+.pagination-fixed :deep(.el-pagination .el-pager li) {
+  min-width: 32px;
+  height: 32px;
+}
+
+.pagination-fixed :deep(.el-pagination .el-pagination__sizes) {
+  margin: 0 4px;
+}
+
+.pagination-fixed :deep(.el-pagination .el-pagination__jump) {
+  margin-left: 4px;
 }
 
 .user-details {
@@ -202,46 +250,12 @@ const handleSizeChange = (size: number) => {
 }
 
 /* Mobile first - base styles for mobile */
-.user-container {
-  padding: 12px;
-  min-height: 100vh;
-}
-
 .user-grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 12px;
   max-width: 1900px;
   margin: 0 auto;
-}
-
-.pagination-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: 20px;
-  padding: 12px 0;
-  gap: 12px;
-}
-
-.pagination-container :deep(.el-pagination) {
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.pagination-container :deep(.el-pagination .btn-prev),
-.pagination-container :deep(.el-pagination .btn-next),
-.pagination-container :deep(.el-pagination .el-pager li) {
-  min-width: 32px;
-  height: 32px;
-}
-
-.pagination-container :deep(.el-pagination .el-pagination__sizes) {
-  margin: 0 4px;
-}
-
-.pagination-container :deep(.el-pagination .el-pagination__jump) {
-  margin-left: 4px;
 }
 
 .user-card {
@@ -348,8 +362,15 @@ const handleSizeChange = (size: number) => {
   }
 }
 
+@media (min-width: 450px) {
+  .pagination {
+    padding: 0 2rem;
+  }
+}
+
 @media (min-width: 480px) {
   .user-container {
+    height: calc(100vh - 245px);
     padding: 16px;
   }
 
@@ -357,9 +378,8 @@ const handleSizeChange = (size: number) => {
     gap: 16px;
   }
 
-  .pagination-container {
-    margin-top: 24px;
-    padding: 16px 0;
+  .pagination-fixed {
+    padding: 24px 0;
   }
 
   .user-card {
@@ -416,6 +436,7 @@ const handleSizeChange = (size: number) => {
 
 @media (min-width: 768px) {
   .user-container {
+    height: calc(100vh - 155px);
     padding: 20px;
   }
 
@@ -424,13 +445,8 @@ const handleSizeChange = (size: number) => {
     gap: 18px;
   }
 
-  .pagination-container {
-    margin-top: 28px;
-    flex-direction: row;
-  }
-
-  .pagination-container :deep(.el-pagination) {
-    flex-wrap: nowrap;
+  .pagination-fixed {
+    padding: 28px 0;
   }
 
   .user-card {
@@ -463,6 +479,7 @@ const handleSizeChange = (size: number) => {
 
 @media (min-width: 1024px) {
   .user-container {
+    height: calc(100vh - 195px);
     padding: 24px;
   }
 
@@ -471,8 +488,8 @@ const handleSizeChange = (size: number) => {
     gap: 20px;
   }
 
-  .pagination-container {
-    margin-top: 32px;
+  .pagination-fixed {
+    padding: 32px 0;
   }
 }
 

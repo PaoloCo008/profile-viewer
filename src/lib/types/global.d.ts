@@ -48,3 +48,10 @@ interface Comment {
   comments: number
   replies: Comment[]
 }
+
+export interface UseGlobalCitySearchReturn {
+  loading: Ref<boolean>
+  error: Ref<string | null>
+  searchCityPostalCodes: (cityName: string) => Promise<PostalCodeSuggestion[]>
+  clearError: () => void
+}

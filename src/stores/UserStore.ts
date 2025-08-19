@@ -6,7 +6,7 @@ import {
   toSingleDecimal,
 } from '@/lib/helpers'
 import type { UserForm } from '@/lib/types/forms'
-import type { Comment, User, UserData } from '@/lib/types/global'
+import type { Comment, DisplayUser, User, UserData } from '@/lib/types/global'
 import { dayjs, ElLoading } from 'element-plus'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
@@ -27,6 +27,16 @@ export const useUserStore = defineStore('user', () => {
   const isUserInUsers = computed(() => (userId: string) => {
     return users.value.findIndex((user) => user.id === userId) !== -1
   })
+
+  const getPaginatedUsers = computed(
+    () => (page: number, pageSize: number, users: DisplayUser[]) => {
+      const start = (page - 1) * pageSize
+      const end = start + pageSize
+      return users.slice(start, end)
+    },
+  )
+
+  const totalUsers = computed(() => users.value.length)
 
   // Actions
   async function fetchUsers(controller?: AbortController) {
@@ -489,6 +499,8 @@ export const useUserStore = defineStore('user', () => {
     loading,
     getUserById,
     isUserInUsers,
+    getPaginatedUsers,
+    totalUsers,
     fetchUsers,
     fetchUser,
     createUser,

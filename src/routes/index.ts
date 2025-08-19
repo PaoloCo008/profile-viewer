@@ -1,3 +1,4 @@
+import TheCatchAllPage from '@/components/TheCatchAllPage.vue'
 import TheMainPage from '@/components/TheMainPage.vue'
 import UserProfile from '@/components/users/UserProfile.vue'
 import { createRouter, createWebHistory } from 'vue-router'
@@ -14,6 +15,11 @@ const router = createRouter({
       path: '/profile/:userId',
       name: 'user-profile',
       component: UserProfile,
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'NotFound',
+      component: TheCatchAllPage,
     },
   ],
 })
