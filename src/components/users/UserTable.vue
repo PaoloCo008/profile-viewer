@@ -5,15 +5,18 @@ import { useRouter } from 'vue-router'
 import { computed } from 'vue'
 import useSearchParams from '@/composables/useSearchParams'
 
-const props = defineProps<{ users: DisplayUser[] }>()
+const props = defineProps<{
+  users: DisplayUser[]
+  currentPage: string
+  handleCurrentChange: (page: number) => void
+}>()
 
 const router = useRouter()
 const userStore = useUserStore()
 
-const currentPage = useSearchParams('page', '1', 'home')
 const pageSize = useSearchParams('size', '10', 'home')
 
-const currentPageNum = computed(() => Number(currentPage.value) || 1)
+const currentPageNum = computed(() => Number(props.currentPage) || 1)
 const pageSizeNum = computed(() => Number(pageSize.value) || 10)
 
 const paginatedUsers = computed(() => {
@@ -22,13 +25,8 @@ const paginatedUsers = computed(() => {
 
 const totalUsers = computed(() => userStore.totalUsers)
 
-const handleCurrentChange = (page: number) => {
-  currentPage.value = String(page)
-}
-
 const handleSizeChange = (size: number) => {
   pageSize.value = String(size)
-  currentPage.value = '1'
 }
 </script>
 

@@ -8,10 +8,13 @@ import { Grid3x3, Plus, Table } from 'lucide-vue-next'
 import { ElMessage } from 'element-plus'
 import AppSearch from './app/AppSearch.vue'
 import useLocalStorage from '@/composables/useLocalStorage'
+import useSearchParams from '@/composables/useSearchParams'
 
 let abortController: AbortController | null = null
 
 const userStore = useUserStore()
+
+const currentPage = useSearchParams('page', '1', 'home')
 
 const isRefreshing = ref(false)
 const viewMode = useLocalStorage<'table' | 'grid'>('view', 'table')
@@ -30,8 +33,13 @@ const users = computed(() =>
 const isTableView = computed(() => viewMode.value === 'table')
 const isGridView = computed(() => viewMode.value === 'grid')
 
+const handleCurrentChange = (page: number) => {
+  currentPage.value = String(page)
+}
+
 function toggleView(mode: 'table' | 'grid') {
   viewMode.value = mode
+  currentPage.value = '1'
 }
 
 function toggleFloatingPanel() {
@@ -119,8 +127,18 @@ onBeforeUnmount(() => {
     </div>
 
     <div class="view-content">
-      <UserTable v-if="isTableView" :users="users" />
-      <UserGrid v-else :users="users" />
+      <UserTable
+        v-if="isTableView"
+        :users="users"
+        :current-page="currentPage as string"
+        :handle-current-change="handleCurrentChange"
+      />
+      <UserGrid
+        v-else
+        :users="users"
+        :current-page="currentPage as string"
+        :handle-current-change="handleCurrentChange"
+      />
     </div>
 
     <button

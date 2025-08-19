@@ -99,3 +99,15 @@ export async function getGlobalPostalCodes(cityName: string) {
     })) || []
   )
 }
+
+export function titleCaseString(str: string) {
+  if (typeof str !== 'string') {
+    return ''
+  }
+
+  return str
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase()
+    .replace(/\p{L}+/gu, (word) => word.charAt(0).toUpperCase() + word.slice(1))
+}

@@ -3,6 +3,7 @@ import {
   createNameFromEmail,
   fetchWithErrorHandling,
   handleApiError,
+  titleCaseString,
   toSingleDecimal,
 } from '@/lib/helpers'
 import type { UserForm } from '@/lib/types/forms'
@@ -37,6 +38,42 @@ export const useUserStore = defineStore('user', () => {
   )
 
   const totalUsers = computed(() => users.value.length)
+
+  const checkForDuplicates = computed(() => (userData: Partial<UserForm>) => {
+    const duplicateFields: string[] = []
+
+    if (userData.email) {
+      const emailUser = users.value.find(
+        (user) => user.email.toLowerCase() === userData.email!.toLowerCase(),
+      )
+      if (emailUser) {
+        duplicateFields.push('email')
+      }
+    }
+
+    if (userData.username) {
+      const usernameUser = users.value.find(
+        (user) => user.username.toLowerCase() === userData.username!.toLowerCase(),
+      )
+      if (usernameUser) {
+        duplicateFields.push('username')
+      }
+    }
+
+    if (userData.phone) {
+      const phoneUser = users.value.find(
+        (user) => user.phone.replace(/\D/g, '') === userData.phone!.replace(/\D/g, ''),
+      )
+      if (phoneUser) {
+        duplicateFields.push('phone')
+      }
+    }
+
+    return {
+      isDuplicate: duplicateFields.length > 0,
+      duplicateFields,
+    }
+  })
 
   // Actions
   async function fetchUsers(controller?: AbortController) {
@@ -124,18 +161,26 @@ export const useUserStore = defineStore('user', () => {
     try {
       loading.value = true
 
+      const duplicateCheck = checkForDuplicates.value(user)
+
+      if (duplicateCheck.isDuplicate) {
+        throw new Error(
+          `User already exists with the same ${duplicateCheck.duplicateFields.join(', ')}`,
+        )
+      }
+
       const lastUserId =
         users.value.length > 0 ? Math.max(...users.value.map((user) => Number(user.id))) : 0
 
       const newUser = {
         id: String(lastUserId + 1),
-        name: user.name,
+        name: titleCaseString(user.name),
         username: user.username,
         email: user.email,
         address: {
-          street: user.street,
-          suite: user.suite,
-          city: user.city,
+          street: titleCaseString(user.street),
+          suite: titleCaseString(user.suite),
+          city: titleCaseString(user.city),
           zipcode: user.zipcode,
           geo: {
             lat: '-37.3159',
@@ -146,9 +191,9 @@ export const useUserStore = defineStore('user', () => {
         phone: user.phone,
         website: user.website,
         company: {
-          name: user.companyName,
-          catchPhrase: user.catchPhrase,
-          bs: user.bs,
+          name: titleCaseString(user.companyName),
+          catchPhrase: titleCaseString(user.catchPhrase),
+          bs: titleCaseString(user.bs),
         },
       }
 

@@ -77,7 +77,7 @@ export const userFormRules = reactive<FormRules<UserForm>>({
       validator: stringValidator('City', {
         minLength: 2,
         maxLength: 50,
-        pattern: /^[\p{L}\s'.-]+$/u,
+        pattern: /^[\p{L}\s'.-/]+$/u,
         patternMessage: 'City can only contain letters, spaces, hyphens, apostrophes, and periods.',
       }),
       trigger: 'change',
