@@ -1,39 +1,53 @@
-# profile-viewer
+# Profile Viewer
 
-This template should help get you started developing with Vue 3 in Vite.
+A simple application demonstrating the lifecycle hooks of Vue by fetching data from a fake API
 
-## Recommended IDE Setup
+### Built With
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- Vue
+- TypeScript
+- CSS
+- HTML
+- Element Plus
+- Vue Router
+- Pinia
+- JSON Server
 
-## Type Support for `.vue` Imports in TS
+### Getting Started
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+To get a local copy up and running of the application, follow these simple steps:
 
-## Customize configuration
+#### Prerequisites
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+##### npm
 
-## Project Setup
+```sh
+npm install npm@latest -g
+```
+
+##### Installation
+
+1. Clone the repo
+
+```sh
+git clone https://github.com/PaoloCo008/profile-viewer.git
+```
+
+2. Install NPM packages
 
 ```sh
 npm install
 ```
 
-### Compile and Hot-Reload for Development
+3. Change git remote url to avoid accidental pushes to base project
 
 ```sh
-npm run dev
+git remote set-url origin github_username/repo_name
+git remote -v
 ```
 
-### Type-Check, Compile and Minify for Production
-
+4. Compile and Hot-Reload for Development with JSON Server
+   
 ```sh
-npm run build
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
+npm run dev-full
 ```
